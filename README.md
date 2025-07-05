@@ -237,7 +237,7 @@ Este protótipo demonstra a interface completa do **Sistema de Controle de Acess
 Este é um protótipo interno para demonstração. Para sugestões ou dúvidas:
 
 1. 💬 Entre em contato
-2. 📧 Envie email para [sauloarradi@gmail.com]
+2. 📧 Envie email para sauloarradi@gmail.com
 3. 🗓️ Agende uma demonstração presencial
 
 ---
