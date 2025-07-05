@@ -32,12 +32,12 @@ Este protótipo demonstra a interface completa do **Sistema de Controle de Acess
 
 ```
 ┌─────────────────┬─────────────────┐
-│   🎛️ CONTROLE   │   📹 CÂMERAS    │
+│   🎛️ CONTROLE  │   📹 CÂMERAS    │
 │    Painel de    │   Sistema de    │
 │     Ações       │   Segurança     │
 ├─────────────────┼─────────────────┤
-│  👥 VISITANTES  │  📦 ENTREGAS &  │
-│     Ativos      │   🚗 VEÍCULOS   │
+│  👥 VISITANTES │   📦 ENTREGAS & │
+│     Ativos      │   🚗 VEÍCULOS  │
 │   (Tempo Real)  │   (Dashboard)   │
 └─────────────────┴─────────────────┘
 ```
