@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Acesso - Portaria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            overflow: hidden;
+        }
+
+        .main-container {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .quadrant {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 2px solid #e1e5e9;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quadrant:hover {
+            border-color: #1890ff;
+            box-shadow: 0 6px 20px rgba(24,144,255,0.2);
+        }
+
+        .quadrant-header {
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            padding: 12px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #52c41a;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .quadrant-content {
+            padding: 16px;
+            height: calc(100% - 60px);
+            overflow-y: auto;
+        }
+
+        /* Painel de Controle */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            height: 100%;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #52c41a, #73d13d);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(82,196,26,0.3);
+        }
+
+        .action-button.danger {
+            background: linear-gradient(135deg, #ff4d4f, #ff7875);
+        }
+
+        .action-button.warning {
+            background: linear-gradient(135deg, #faad14, #ffc53d);
+        }
+
+        .action-button.info {
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+        }
+
+        .button-icon {
+            font-size: 24px;
+        }
+
+        /* Sistema de Câmeras */
+        .camera-system {
+            background: #000;
+            height: 100%;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .camera-placeholder {
+            width: 80%;
+            height: 70%;
+            background: linear-gradient(45deg, #333, #555);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .camera-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .camera-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Lista de Visitantes */
+        .visitor-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #52c41a;
+            transition: all 0.3s ease;
+        }
+
+        .visitor-item:hover {
+            background: #e6f7ff;
+            border-left-color: #1890ff;
+        }
+
+        .visitor-item.warning {
+            border-left-color: #faad14;
+            background: #fffbe6;
+        }
+
+        .visitor-name {
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .visitor-info {
+            font-size: 12px;
+            color: #8c8c8c;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .time-badge {
+            background: #52c41a;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+
+        .time-badge.warning {
+            background: #faad14;
+        }
+
+        /* Entregas e Alertas */
+        .delivery-item {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .delivery-item:hover {
+            background: #fff1b8;
+        }
+
+        .delivery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .delivery-title {
+            font-weight: 600;
+            color: #ad6800;
+        }
+
+        .delivery-badge {
+            background: #faad14;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+
+        .delivery-info {
+            font-size: 12px;
+            color: #595959;
+        }
+
+        /* Clock */
+        .clock-widget {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .current-time {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1890ff;
+            margin-bottom: 4px;
+        }
+
+        .current-date {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #1890ff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #52c41a, #73d13d);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #389e0d, #52c41a);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .quadrant-header {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            
+            .action-button {
+                padding: 16px;
+                font-size: 12px;
+            }
+            
+            .button-icon {
+                font-size: 20px;
+            }
+        }
+
+        /* Scrollbar customizada */
+        .quadrant-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .quadrant-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .quadrant-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .quadrant-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Quadrante Superior Esquerdo - Painel de Controle -->
+        <div class="quadrant">
+            <div class="quadrant-header">
+                <span>🎛️ Painel de Controle</span>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="quadrant-content">
+                <div class="clock-widget">
+                    <div class="current-time" id="currentTime">14:23:45</div>
+                    <div class="current-date" id="currentDate">Sábado, 05 de Julho de 2025</div>
+                </div>
+                
+                <div class="control-panel">
+                    <button class="action-button" onclick="openVisitorModal()">
+                        <span class="button-icon">👤</span>
+                        <span>Nova Entrada</span>
+                    </button>
+                    
+                    <button class="action-button danger" onclick="registerExit()">
+                        <span class="button-icon">🚪</span>
+                        <span>Registrar Saída</span>
+                    </button>
+                    
+                    <button class="action-button info" onclick="openVehicleModal()">
+                        <span class="button-icon">🚗</span>
+                        <span>Controle Veículos</span>
+                    </button>
+                    
+                    <button class="action-button warning" onclick="openDeliveryModal()">
+                        <span class="button-icon">📦</span>
+                        <span>Nova Entrega</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadrante Superior Direito - Sistema de Câmeras -->
+        <div class="quadrant">
+            <div class="quadrant-header">
+                <span>📹 Sistema de Câmeras</span>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="quadrant-content">
+                <div class="camera-system">
+                    <div class="camera-placeholder">
+                        <div class="camera-overlay">Portaria Principal - Câmera 01</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 8px;">📹</div>
+                            <div>Sistema de Câmeras Integrado</div>
+                            <div style="font-size: 12px; opacity: 0.7; margin-top: 8px;">
+                                (Interface atual será mantida)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="camera-controls">
+                        <button class="camera-btn" onclick="switchCamera()">🔄 Próxima</button>
+                        <button class="camera-btn" onclick="toggleFullscreen()">⛶ Tela Cheia</button>
+                        <button class="camera-btn" onclick="takeSnapshot()">📸 Foto</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadrante Inferior Esquerdo - Visitantes Ativos -->
+        <div class="quadrant">
+            <div class="quadrant-header">
+                <span>👥 Visitantes Ativos (3)</span>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="quadrant-content">
+                <div class="visitor-item">
+                    <div class="visitor-name">João Silva Santos</div>
+                    <div class="visitor-info">
+                        <span>Financeiro • Maria Costa</span>
+                        <span class="time-badge">2h 15min</span>
+                    </div>
+                </div>
+                
+                <div class="visitor-item warning">
+                    <div class="visitor-name">Ana Paula Lima</div>
+                    <div class="visitor-info">
+                        <span>TI • Carlos Mendes</span>
+                        <span class="time-badge warning">4h 32min</span>
+                    </div>
+                </div>
+                
+                <div class="visitor-item">
+                    <div class="visitor-name">Roberto Oliveira</div>
+                    <div class="visitor-info">
+                        <span>Comercial • José Silva</span>
+                        <span class="time-badge">45min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quadrante Inferior Direito - Entregas e Alertas -->
+        <div class="quadrant">
+            <div class="quadrant-header">
+                <span>📦 Entregas Pendentes (4)</span>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="quadrant-content">
+                <div class="delivery-item">
+                    <div class="delivery-header">
+                        <span class="delivery-title">Mercado Livre</span>
+                        <span class="delivery-badge">Urgente</span>
+                    </div>
+                    <div class="delivery-info">
+                        Para: Departamento de TI<br>
+                        Chegou: Hoje, 09:30
+                    </div>
+                </div>
+                
+                <div class="delivery-item">
+                    <div class="delivery-header">
+                        <span class="delivery-title">Correios</span>
+                        <span class="delivery-badge">Normal</span>
+                    </div>
+                    <div class="delivery-info">
+                        Para: Maria Santos - RH<br>
+                        Chegou: Hoje, 11:15
+                    </div>
+                </div>
+                
+                <div class="delivery-item">
+                    <div class="delivery-header">
+                        <span class="delivery-title">Transportadora ABC</span>
+                        <span class="delivery-badge">Normal</span>
+                    </div>
+                    <div class="delivery-info">
+                        Para: Almoxarifado<br>
+                        Chegou: Hoje, 13:45
+                    </div>
+                </div>
+                
+                <div class="delivery-item">
+                    <div class="delivery-header">
+                        <span class="delivery-title">Shopee</span>
+                        <span class="delivery-badge">Normal</span>
+                    </div>
+                    <div class="delivery-info">
+                        Para: João Silva - Financeiro<br>
+                        Chegou: Hoje, 14:10
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Novo Visitante -->
+    <div id="visitorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👤 Nova Entrada de Visitante</h2>
+                <span class="close" onclick="closeModal('visitorModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="registerVisitor(event)">
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo *</label>
+                        <input type="text" class="form-input" placeholder="Digite o nome completo" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CPF/RG *</label>
+                            <input type="text" class="form-input" placeholder="000.000.000-00" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select">
+                                <option value="cpf">CPF</option>
+                                <option value="rg">RG</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Empresa</label>
+                        <input type="text" class="form-input" placeholder="Nome da empresa (opcional)">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Setor de Destino *</label>
+                            <select class="form-select" onchange="loadEmployees(this.value)" required>
+                                <option value="">Selecione o setor</option>
+                                <option value="ti">Tecnologia da Informação</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="rh">Recursos Humanos</option>
+                                <option value="comercial">Comercial</option>
+                                <option value="diretoria">Diretoria</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Funcionário Responsável *</label>
+                            <select class="form-select" id="employeeSelect" required>
+                                <option value="">Primeiro selecione o setor</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Placa do Veículo</label>
+                        <input type="text" class="form-input" placeholder="ABC-1234 (opcional)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Motivo da Visita</label>
+                        <input type="text" class="form-input" placeholder="Reunião, entrega, etc.">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">✅ Registrar Entrada</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Controle de Veículos -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚗 Controle de Veículos da Empresa</h2>
+                <span class="close" onclick="closeModal('vehicleModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="registerVehicle(event)">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Movimentação *</label>
+                        <select class="form-select" id="movementType" onchange="updateVehicleForm(this.value)" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="saida">🚗 Saída de Veículo</option>
+                            <option value="entrada">🏠 Retorno de Veículo</option>
+                        </select>
+                    </div>
+
+                    <div id="vehicleFormContent" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Veículo da Empresa *</label>
+                            <select class="form-select" id="vehicleSelect" onchange="loadVehicleInfo(this.value)" required>
+                                <option value="">Selecione o veículo</option>
+                                <option value="abc1234">ABC-1234 - Corolla Branco</option>
+                                <option value="def5678">DEF-5678 - Civic Prata</option>
+                                <option value="ghi9012">GHI-9012 - Hilux Preta</option>
+                                <option value="jkl3456">JKL-3456 - HB20 Azul</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Funcionário *</label>
+                                <select class="form-select" id="employeeVehicle" required>
+                                    <option value="">Selecione o funcionário</option>
+                                    <option value="carlos">Carlos Mendes - TI</option>
+                                    <option value="maria">Maria Santos - RH</option>
+                                    <option value="jose">José Silva - Comercial</option>
+                                    <option value="ana">Ana Costa - Financeiro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" id="kmLabel">Quilometragem *</label>
+                                <input type="number" class="form-input" id="kmInput" placeholder="Ex: 85432" required>
+                                <small id="kmHelper" style="color: #8c8c8c; font-size: 12px; margin-top: 4px; display: block;"></small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" id="destinationGroup">
+                            <label class="form-label">Destino</label>
+                            <input type="text" class="form-input" id="destinationInput" placeholder="Local de destino">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Observações</label>
+                            <input type="text" class="form-input" placeholder="Informações adicionais">
+                        </div>
+                        
+                        <button type="submit" class="submit-btn" id="submitVehicleBtn">🚗 Registrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Nova Entrega -->
+    <div id="deliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📦 Nova Entrega Recebida</h2>
+                <span class="close" onclick="closeModal('deliveryModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="registerDelivery(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Transportadora *</label>
+                            <select class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="correios">Correios</option>
+                                <option value="mercadolivre">Mercado Livre</option>
+                                <option value="shopee">Shopee</option>
+                                <option value="sedex">Sedex</option>
+                                <option value="transportadora">Transportadora</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Código de Rastreamento</label>
+                            <input type="text" class="form-input" placeholder="Ex: BR123456789">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Setor Destino *</label>
+                            <select class="form-select" required>
+                                <option value="">Selecione o setor</option>
+                                <option value="ti">Tecnologia da Informação</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="rh">Recursos Humanos</option>
+                                <option value="comercial">Comercial</option>
+                                <option value="diretoria">Diretoria</option>
+                                <option value="almoxarifado">Almoxarifado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Destinatário</label>
+                            <input type="text" class="form-input" placeholder="Nome do destinatário">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Descrição da Entrega</label>
+                        <input type="text" class="form-input" placeholder="Breve descrição do conteúdo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Observações</label>
+                        <input type="text" class="form-input" placeholder="Informações adicionais">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">📦 Registrar Entrega</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados fictícios para demonstração
+        const employees = {
+            ti: ['Carlos Mendes', 'Roberto Silva', 'Ana Martins'],
+            financeiro: ['Maria Costa', 'João Santos', 'Pedro Lima'],
+            rh: ['Ana Santos', 'Carlos Oliveira', 'Mariana Costa'],
+            comercial: ['José Silva', 'Ricardo Mendes', 'Patricia Alves'],
+            diretoria: ['Paulo Diretor', 'Carla Gerente', 'Marco Supervisor']
+        };
+
+        // Atualização do relógio
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('pt-BR');
+            const dateString = now.toLocaleDateString('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('currentTime').textContent = timeString;
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Funções dos modais
+        function openVisitorModal() {
+            document.getElementById('visitorModal').style.display = 'block';
+        }
+
+        function openVehicleModal() {
+            document.getElementById('vehicleModal').style.display = 'block';
+        }
+
+        function openDeliveryModal() {
+            document.getElementById('deliveryModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Carregar funcionários baseado no setor
+        function loadEmployees(sector) {
+            const select = document.getElementById('employeeSelect');
+            select.innerHTML = '<option value="">Selecione o funcionário</option>';
+            
+            if (sector && employees[sector]) {
+                employees[sector].forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = employee.toLowerCase().replace(' ', '');
+                    option.textContent = employee;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Simular carregamento de informações do veículo
+        function loadVehicleInfo(vehicleId) {
+            if (vehicleId) {
+                // Simulação de dados do veículo baseado no tipo de movimentação
+                const movementType = document.getElementById('movementType').value;
+                const kmInput = document.getElementById('kmInput');
+                const kmHelper = document.getElementById('kmHelper');
+                
+                // Dados fictícios dos veículos
+                const vehicleData = {
+                    abc1234: { lastKm: 85430, status: 'fora' },
+                    def5678: { lastKm: 92150, status: 'disponivel' },
+                    ghi9012: { lastKm: 156780, status: 'fora' },
+                    jkl3456: { lastKm: 34520, status: 'disponivel' }
+                };
+                
+                const vehicle = vehicleData[vehicleId];
+                if (vehicle) {
+                    if (movementType === 'saida') {
+                        kmInput.value = vehicle.lastKm;
+                        kmHelper.textContent = `Última quilometragem registrada: ${vehicle.lastKm} km`;
+                        if (vehicle.status === 'fora') {
+                            kmHelper.textContent += ' ⚠️ Veículo já está em uso!';
+                            kmHelper.style.color = '#faad14';
+                        }
+                    } else if (movementType === 'entrada') {
+                        kmHelper.textContent = `Informe a quilometragem atual (deve ser maior que ${vehicle.lastKm} km)`;
+                        kmInput.placeholder = `Maior que ${vehicle.lastKm}`;
+                        kmInput.min = vehicle.lastKm + 1;
+                    }
+                }
+            }
+        }
+
+        // Atualizar formulário baseado no tipo de movimentação
+        function updateVehicleForm(type) {
+            const formContent = document.getElementById('vehicleFormContent');
+            const kmLabel = document.getElementById('kmLabel');
+            const kmInput = document.getElementById('kmInput');
+            const kmHelper = document.getElementById('kmHelper');
+            const destinationGroup = document.getElementById('destinationGroup');
+            const destinationInput = document.getElementById('destinationInput');
+            const submitBtn = document.getElementById('submitVehicleBtn');
+            const vehicleSelect = document.getElementById('vehicleSelect');
+            
+            if (type) {
+                formContent.style.display = 'block';
+                
+                if (type === 'saida') {
+                    kmLabel.textContent = 'Quilometragem de Saída *';
+                    kmInput.placeholder = 'Ex: 85432';
+                    kmHelper.textContent = 'Quilometragem atual do veículo';
+                    destinationGroup.style.display = 'block';
+                    destinationInput.required = true;
+                    submitBtn.innerHTML = '🚗 Registrar Saída';
+                    submitBtn.className = 'submit-btn';
+                    
+                    // Filtrar apenas veículos disponíveis para saída
+                    updateVehicleOptions('disponivel');
+                    
+                } else if (type === 'entrada') {
+                    kmLabel.textContent = 'Quilometragem de Retorno *';
+                    kmInput.placeholder = 'Ex: 85500';
+                    kmHelper.textContent = 'Quilometragem no retorno (deve ser maior que a saída)';
+                    destinationGroup.style.display = 'none';
+                    destinationInput.required = false;
+                    submitBtn.innerHTML = '🏠 Registrar Retorno';
+                    submitBtn.className = 'submit-btn';
+                    submitBtn.style.background = 'linear-gradient(135deg, #1890ff, #40a9ff)';
+                    
+                    // Filtrar apenas veículos que estão fora para retorno
+                    updateVehicleOptions('fora');
+                }
+                
+                // Limpar seleção anterior
+                vehicleSelect.value = '';
+                kmInput.value = '';
+                kmHelper.style.color = '#8c8c8c';
+            } else {
+                formContent.style.display = 'none';
+            }
+        }
+
+        // Atualizar opções de veículos baseado no status
+        function updateVehicleOptions(statusFilter) {
+            const vehicleSelect = document.getElementById('vehicleSelect');
+            const allVehicles = [
+                { value: 'abc1234', text: 'ABC-1234 - Corolla Branco', status: 'fora' },
+                { value: 'def5678', text: 'DEF-5678 - Civic Prata', status: 'disponivel' },
+                { value: 'ghi9012', text: 'GHI-9012 - Hilux Preta', status: 'fora' },
+                { value: 'jkl3456', text: 'JKL-3456 - HB20 Azul', status: 'disponivel' }
+            ];
+            
+            // Limpar opções atuais
+            vehicleSelect.innerHTML = '<option value="">Selecione o veículo</option>';
+            
+            // Adicionar apenas veículos com status adequado
+            allVehicles.forEach(vehicle => {
+                if (vehicle.status === statusFilter) {
+                    const option = document.createElement('option');
+                    option.value = vehicle.value;
+                    option.textContent = vehicle.text;
+                    vehicleSelect.appendChild(option);
+                }
+            });
+            
+            // Adicionar mensagem se não houver veículos
+            if (vehicleSelect.children.length === 1) {
+                const option = document.createElement('option');
+                option.disabled = true;
+                if (statusFilter === 'disponivel') {
+                    option.textContent = 'Nenhum veículo disponível para saída';
+                } else {
+                    option.textContent = 'Nenhum veículo em circulação para retorno';
+                }
+                vehicleSelect.appendChild(option);
+            }
+        }
+
+        // Registrar visitante
+        function registerVisitor(event) {
+            event.preventDefault();
+            
+            // Simular registro
+            alert('✅ Visitante registrado com sucesso!\n\nFoto capturada automaticamente.\nNotificação enviada para o responsável.');
+            closeModal('visitorModal');
+            
+            // Simular atualização da lista
+            setTimeout(() => {
+                alert('🔔 Lista de visitantes atualizada!');
+            }, 1000);
+        }
+
+        // Registrar veículo
+        function registerVehicle(event) {
+            event.preventDefault();
+            
+            alert('🚗 Saída de veículo registrada!\n\nQuilometragem: Registrada\nResponsável: Notificado');
+            closeModal('vehicleModal');
+        }
+
+        // Registrar entrega
+        function registerDelivery(event) {
+            event.preventDefault();
+            
+            alert('📦 Entrega registrada com sucesso!\n\nNotificação enviada para o setor.\nItem adicionado à lista de pendências.');
+            closeModal('deliveryModal');
+        }
+
+        // Registrar saída de visitante
+        function registerExit() {
+            const visitors = [
+                'João Silva Santos',
+                'Ana Paula Lima', 
+                'Roberto Oliveira'
+            ];
+            
+            const visitor = prompt('Digite o nome do visitante que está saindo:\n\n' + visitors.join('\n'));
+            
+            if (visitor) {
+                alert('🚪 Saída registrada com sucesso!\n\nVisitante: ' + visitor + '\nHorário: ' + new Date().toLocaleTimeString('pt-BR'));
+            }
+        }
+
+        // Funções das câmeras
+        function switchCamera() {
+            const cameras = ['Portaria Principal', 'Estacionamento', 'Recepção', 'Corredor Principal'];
+            const currentCamera = Math.floor(Math.random() * cameras.length);
+            
+            document.querySelector('.camera-overlay').textContent = cameras[currentCamera] + ' - Câmera ' + String(currentCamera + 1).padStart(2, '0');
+            
+            // Simular mudança de câmera
+            const placeholder = document.querySelector('.camera-placeholder');
+            placeholder.style.opacity = '0.5';
+            setTimeout(() => {
+                placeholder.style.opacity = '1';
+            }, 500);
+        }
+
+        function toggleFullscreen() {
+            alert('🖥️ Modo tela cheia ativado!\n\nPressione ESC para sair do modo tela cheia.');
+        }
+
+        function takeSnapshot() {
+            alert('📸 Foto capturada!\n\nImagem salva no sistema com timestamp:\n' + new Date().toLocaleString('pt-BR'));
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Teclas de atalho
+        document.addEventListener('keydown', function(event) {
+            // ESC para fechar modais
+            if (event.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+            
+            // F1-F4 para focar nos quadrantes
+            if (event.key === 'F1') {
+                event.preventDefault();
+                alert('🎛️ Foco no Painel de Controle');
+            } else if (event.key === 'F2') {
+                event.preventDefault();
+                alert('📹 Foco no Sistema de Câmeras');
+            } else if (event.key === 'F3') {
+                event.preventDefault();
+                alert('👥 Foco na Lista de Visitantes');
+            } else if (event.key === 'F4') {
+                event.preventDefault();
+                alert('📦 Foco nas Entregas');
+            }
+            
+            // Teclas de ação rápida
+            if (event.ctrlKey && event.key === '1') {
+                event.preventDefault();
+                openVisitorModal();
+            } else if (event.ctrlKey && event.key === '2') {
+                event.preventDefault();
+                registerExit();
+            } else if (event.ctrlKey && event.key === '3') {
+                event.preventDefault();
+                openVehicleModal();
+            } else if (event.ctrlKey && event.key === '4') {
+                event.preventDefault();
+                openDeliveryModal();
+            }
+        });
+
+        // Simulação de notificações em tempo real
+        function simulateRealTimeUpdates() {
+            const events = [
+                'Novo visitante aguardando na portaria',
+                'Entrega chegou para o setor Financeiro',
+                'Veículo ABC-1234 retornou à empresa',
+                'Visitante Ana Paula Lima ultrapassou 4 horas',
+                'Nova entrega do Mercado Livre'
+            ];
+            
+            setInterval(() => {
+                if (Math.random() > 0.9) { // 10% de chance a cada intervalo
+                    const event = events[Math.floor(Math.random() * events.length)];
+                    showNotification(event);
+                }
+            }, 5000);
+        }
+
+        function showNotification(message) {
+            // Criar notificação visual
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #52c41a, #73d13d);
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 2000;
+                max-width: 300px;
+                font-size: 14px;
+                animation: slideIn 0.5s ease;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>🔔</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remover após 4 segundos
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 4000);
+        }
+
+        // Adicionar CSS para animações de notificação
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            
+            .help-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 3000;
+                flex-direction: column;
+                text-align: center;
+                font-size: 18px;
+                line-height: 1.6;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Adicionar overlay de ajuda
+        const helpOverlay = document.createElement('div');
+        helpOverlay.className = 'help-overlay';
+        helpOverlay.innerHTML = `
+            <div style="max-width: 600px; padding: 40px;">
+                <h2 style="margin-bottom: 30px; color: #40a9ff;">🎛️ Sistema de Controle de Acesso - Ajuda</h2>
+                <div style="text-align: left; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">
+                    <h3>⌨️ Teclas de Atalho:</h3>
+                    <p><strong>F1-F4:</strong> Focar nos quadrantes</p>
+                    <p><strong>Ctrl+1:</strong> Nova entrada de visitante</p>
+                    <p><strong>Ctrl+2:</strong> Registrar saída</p>
+                    <p><strong>Ctrl+3:</strong> Controle de veículos</p>
+                    <p><strong>Ctrl+4:</strong> Nova entrega</p>
+                    <p><strong>ESC:</strong> Fechar modais</p>
+                    <br>
+                    <h3>📱 Recursos do Protótipo:</h3>
+                    <p>• Interface dividida em 4 quadrantes</p>
+                    <p>• Integração com câmeras (simulada)</p>
+                    <p>• Controle de visitantes em tempo real</p>
+                    <p>• Gestão de entregas e veículos</p>
+                    <p>• Notificações automáticas</p>
+                </div>
+                <button onclick="hideHelp()" style="margin-top: 20px; padding: 12px 24px; background: #1890ff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">Entendi!</button>
+            </div>
+        `;
+        document.body.appendChild(helpOverlay);
+
+        function showHelp() {
+            helpOverlay.style.display = 'flex';
+        }
+
+        function hideHelp() {
+            helpOverlay.style.display = 'none';
+        }
+
+        // Adicionar botão de ajuda
+        const helpButton = document.createElement('button');
+        helpButton.innerHTML = '❓';
+        helpButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(24,144,255,0.3);
+            transition: all 0.3s ease;
+        `;
+        helpButton.onclick = showHelp;
+        helpButton.onmouseover = function() {
+            this.style.transform = 'scale(1.1)';
+        };
+        helpButton.onmouseout = function() {
+            this.style.transform = 'scale(1)';
+        };
+        document.body.appendChild(helpButton);
+
+        // Inicialização
+        updateClock();
+        setInterval(updateClock, 1000);
+        simulateRealTimeUpdates();
+
+        // Mostrar ajuda inicial
+        setTimeout(() => {
+            showNotification('Sistema iniciado com sucesso! Clique no ? para ver as teclas de atalho.');
+        }, 1000);
+
+        console.log('🎛️ Sistema de Controle de Acesso - Protótipo Demo Carregado');
+        console.log('📋 Funcionalidades disponíveis:');
+        console.log('   • Cadastro de visitantes com validação');
+        console.log('   • Controle de veículos da empresa');
+        console.log('   • Gestão de entregas');
+        console.log('   • Interface multi-tela otimizada para TV');
+        console.log('   • Integração simulada com sistema de câmeras');
+        console.log('   • Notificações em tempo real');
+        console.log('⌨️ Use Ctrl+1 a Ctrl+4 para ações rápidas!');
+    </script>
+</body>
+</html>
