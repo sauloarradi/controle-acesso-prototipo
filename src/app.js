@@ -1,7 +1,20 @@
 import { dashboardTemplate } from './modules/dashboard.js';
-import { modalsTemplate, wireModalEvents, openModal } from './modules/modals.js';
-import { autoCheckinFirstScheduled, getState } from './services/state.js';
+import {
+  addDelivery,
+  addPerson,
+  addUser,
+  addVehicle,
+  autoCheckinFirstScheduled,
+  getState,
+  getTodayDeliveries,
+  queryHistory,
+  registerDelivery,
+  registerVisitExit
+} from './services/state.js';
 import { notifyAudit } from './services/audit-service.js';
+
+let activeSection = 'principal';
+let queryResult = [];
 
 function updateClock() {
   const now = new Date();
@@ -12,54 +25,127 @@ function updateClock() {
   time.textContent = now.toLocaleTimeString('pt-BR');
   date.textContent = now.toLocaleDateString('pt-BR', {
     weekday: 'long',
-    year: 'numeric',
+    day: '2-digit',
     month: 'long',
-    day: 'numeric'
+    year: 'numeric'
   });
 }
 
 function render() {
-  const app = document.getElementById('app');
   const state = getState();
-  app.innerHTML = dashboardTemplate(state) + modalsTemplate();
-
-  wireModalEvents(render);
-  wireActions();
+  const todayDeliveries = getTodayDeliveries();
+  document.getElementById('app').innerHTML = dashboardTemplate({ state, todayDeliveries, activeSection, queryResult });
   updateClock();
+  wireEvents();
 }
 
-function wireActions() {
-  document.querySelectorAll('[data-action]').forEach((button) => {
+function formDataToObject(form) {
+  return Object.fromEntries(new FormData(form).entries());
+}
+
+function wireEvents() {
+  document.querySelectorAll('.nav-btn').forEach((button) => {
     button.addEventListener('click', () => {
-      const action = button.getAttribute('data-action');
-
-      if (action === 'open-visitor-modal') openModal('visitorModal');
-      if (action === 'open-delivery-modal') openModal('deliveryModal');
-      if (action === 'open-search-modal') openModal('searchModal');
-      if (action === 'register-visitor-exit') window.registerVisitorExit();
-      if (action === 'register-delivery') window.registerDeliveryReceipt();
-
-      if (action === 'auto-checkin') {
-        const visit = autoCheckinFirstScheduled();
-        if (!visit) {
-          alert('Não há visitas agendadas pendentes.');
-          return;
-        }
-        notifyAudit('AUTO_CHECKIN', visit.name);
-        alert(`Entrada automática registrada para ${visit.name}.`);
-        render();
-      }
+      activeSection = button.dataset.nav;
+      render();
     });
   });
+
+  const autoBtn = document.getElementById('btnAutoCheckin');
+  if (autoBtn) {
+    autoBtn.addEventListener('click', () => {
+      const visit = autoCheckinFirstScheduled();
+      if (!visit) {
+        alert('Não há visitas programadas para entrada automática.');
+        return;
+      }
+      notifyAudit('VISIT_AUTO_ENTRY', visit.name);
+      alert(`Entrada registrada para ${visit.name} e movida para visitas em andamento.`);
+      render();
+    });
+  }
+
+  document.querySelectorAll('[data-exit-visit]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const visitId = Number(button.dataset.exitVisit);
+      const visit = registerVisitExit(visitId, getState().currentUser);
+      if (!visit) return;
+      notifyAudit('VISIT_EXIT', visit.name);
+      alert(`Saída registrada: ${visit.name}. Usuário e horário foram salvos.`);
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-delivery-received]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const deliveryId = Number(button.dataset.deliveryReceived);
+      const observation = prompt('Observação do recebimento:') || '';
+      const delivery = registerDelivery(deliveryId, observation, getState().currentUser);
+      if (!delivery) return;
+      notifyAudit('DELIVERY_RECEIVED', delivery.keyword);
+      alert('Entrega recebida registrada com usuário, data/hora e observação. E-mail: simulado.');
+      render();
+    });
+  });
+
+  const formPessoa = document.getElementById('formPessoa');
+  if (formPessoa) {
+    formPessoa.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addPerson(formDataToObject(formPessoa));
+      notifyAudit('PERSON_CREATE');
+      alert('Pessoa cadastrada com sucesso.');
+      formPessoa.reset();
+      render();
+    });
+  }
+
+  const formVeiculo = document.getElementById('formVeiculo');
+  if (formVeiculo) {
+    formVeiculo.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addVehicle(formDataToObject(formVeiculo));
+      notifyAudit('VEHICLE_CREATE');
+      alert('Veículo cadastrado com sucesso.');
+      formVeiculo.reset();
+      render();
+    });
+  }
+
+  const formEntrega = document.getElementById('formEntrega');
+  if (formEntrega) {
+    formEntrega.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addDelivery(formDataToObject(formEntrega));
+      notifyAudit('DELIVERY_CREATE');
+      alert('Entrega futura cadastrada com sucesso.');
+      formEntrega.reset();
+      render();
+    });
+  }
+
+  const formUsuario = document.getElementById('formUsuario');
+  if (formUsuario) {
+    formUsuario.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addUser(formDataToObject(formUsuario));
+      notifyAudit('USER_CREATE');
+      alert('Usuário cadastrado com sucesso.');
+      formUsuario.reset();
+      render();
+    });
+  }
+
+  const formConsulta = document.getElementById('formConsulta');
+  if (formConsulta) {
+    formConsulta.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const values = formDataToObject(formConsulta);
+      queryResult = queryHistory(values.document, values.plate);
+      render();
+    });
+  }
 }
 
 render();
 setInterval(updateClock, 1000);
-
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    document.querySelectorAll('.modal').forEach((modal) => {
-      modal.style.display = 'none';
-    });
-  }
-});
