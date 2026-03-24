@@ -21,12 +21,6 @@ export function dashboardTemplate(state) {
         <button class="btn btn-warning" data-action="register-delivery">✅ Registrar recebimento entrega</button>
         <button class="btn btn-primary" data-action="open-search-modal">🔎 Consulta CPF/Placa</button>
       </div>
-
-      <div class="sidebar-note">
-        • Sem integração de câmeras.<br>
-        • Banco de dados dedicado (fora do Protheus).<br>
-        • Auditoria obrigatória em entrada/saída/entrega.
-      </div>
     </aside>
 
     <main class="main">
