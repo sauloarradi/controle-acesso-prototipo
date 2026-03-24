@@ -34,9 +34,3 @@ Protótipo funcional alinhado ao documento de requisitos da portaria.
         ├── components.css
         ├── layout.css
         └── tokens.css
-```
-
-## Observações
-
-- Banco dedicado (fora do Protheus) previsto para próxima etapa (SQL Server).
-- Auditoria simulada em console para ações críticas (entrada, saída, recebimento).
