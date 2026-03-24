@@ -1,14 +1,19 @@
 # Sistema de Controle de Acesso (Portaria)
 
-Este repositório evoluiu de um protótipo monolítico para uma estrutura modular de frontend, visando caminho profissional e reaproveitamento para outras empresas.
+Protótipo funcional alinhado ao documento de requisitos da portaria.
 
-## Decisão de tecnologia (sem AdvPL)
+## O que está funcionando nesta versão
 
-Para maximizar escalabilidade e portabilidade multiempresa:
-
-- **Frontend atual**: HTML + CSS + JavaScript modular (ES Modules), sem dependência de framework.
-- **Roadmap recomendado**: React + TypeScript no frontend, API em Node.js/NestJS ou .NET, banco PostgreSQL.
-- **Motivo**: separação de responsabilidades, facilidade de manutenção, onboarding rápido e possibilidade de SaaS multi-tenant.
+- Tela principal com:
+  - Visitas programadas;
+  - Visitas em andamento (nome, horário de entrada, tempo de permanência e setor);
+  - Entregas do dia atual (com filtro por data/período);
+  - Botão de entrada automática e saída com auditoria.
+- Cadastro de pessoas: funcionário, fornecedor e visitante (com campo de foto URL).
+- Cadastro de veículos: próprio/terceiro e vínculo com funcionário.
+- Cadastro de entregas: data única ou período, com registro de recebimento.
+- Cadastro de usuários.
+- Tela de consulta por CPF/RG ou placa para histórico de visitas (entrada/saída).
 
 ## Estrutura do projeto
 
@@ -29,3 +34,9 @@ Para maximizar escalabilidade e portabilidade multiempresa:
         ├── components.css
         ├── layout.css
         └── tokens.css
+```
+
+## Observações
+
+- Banco dedicado (fora do Protheus) previsto para próxima etapa (SQL Server).
+- Auditoria simulada em console para ações críticas (entrada, saída, recebimento).
