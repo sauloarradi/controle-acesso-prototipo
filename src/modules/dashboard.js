@@ -7,7 +7,7 @@ export function dashboardTemplate(state) {
   <div class="app">
     <aside class="sidebar">
       <h1>🛡️ Controle de Acesso</h1>
-      <p>Portaria corporativa (versão sem ADVPL, pronta para expansão multiempresa).</p>
+      <p>Recepção Portaria</p>
 
       <div class="clock">
         <strong id="clockTime">--:--:--</strong>
