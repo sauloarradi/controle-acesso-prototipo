@@ -1,5 +1,10 @@
 import { dashboardTemplate } from './modules/dashboard.js';
 import {
+  addDeliveryPlan,
+  addPerson,
+  addScheduledVisit,
+  addUser,
+  addVehicle,
   autoCheckinVisit,
   getOverdueDeliveries,
   getState,
@@ -26,15 +31,17 @@ function updateClock() {
   d.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+function formValues(form) {
+  return Object.fromEntries(new FormData(form).entries());
+}
+
 function render() {
   const state = getState();
-  const todayDeliveries = getTodayDeliveries();
-  const overdueDeliveries = getOverdueDeliveries();
   document.getElementById('app').innerHTML = dashboardTemplate({
     state,
     activeScreen,
-    todayDeliveries,
-    overdueDeliveries,
+    todayDeliveries: getTodayDeliveries(),
+    overdueDeliveries: getOverdueDeliveries(),
     queryResult
   });
   updateClock();
@@ -42,48 +49,38 @@ function render() {
 }
 
 function wireEvents() {
-  document.querySelectorAll('.nav-btn').forEach((button) => {
+  document.querySelectorAll('.nav-btn,[data-open-screen]').forEach((button) => {
     button.addEventListener('click', () => {
-      activeScreen = button.dataset.screen;
-      render();
-    });
-  });
-
-  document.querySelectorAll('[data-open-screen]').forEach((button) => {
-    button.addEventListener('click', () => {
-      activeScreen = button.dataset.openScreen;
+      activeScreen = button.dataset.screen || button.dataset.openScreen;
       render();
     });
   });
 
   document.querySelectorAll('[data-auto-checkin]').forEach((button) => {
     button.addEventListener('click', () => {
-      const visitId = Number(button.dataset.autoCheckin);
-      const created = autoCheckinVisit(visitId, getState().currentUser);
-      if (!created) return;
-      notifyAudit('VISIT_AUTO_ENTRY', created.name);
-      alert(`Entrada automática registrada para ${created.name}.`);
+      const visit = autoCheckinVisit(Number(button.dataset.autoCheckin), getState().currentUser);
+      if (!visit) return;
+      notifyAudit('VISIT_AUTO_ENTRY', visit.name);
+      alert(`Entrada automática registrada para ${visit.name}.`);
       render();
     });
   });
 
   document.querySelectorAll('[data-exit-visit]').forEach((button) => {
     button.addEventListener('click', () => {
-      const visitId = Number(button.dataset.exitVisit);
-      const closed = registerVisitExit(visitId, getState().currentUser);
-      if (!closed) return;
-      notifyAudit('VISIT_EXIT', closed.name);
-      alert(`Saída registrada para ${closed.name}.`);
+      const visit = registerVisitExit(Number(button.dataset.exitVisit), getState().currentUser);
+      if (!visit) return;
+      notifyAudit('VISIT_EXIT', visit.name);
+      alert(`Saída registrada para ${visit.name}.`);
       render();
     });
   });
 
   document.querySelectorAll('[data-receive-delivery]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = Number(button.dataset.receiveDelivery);
       const observation = prompt('Observação do recebimento (obrigatório):');
       if (!observation) return alert('É obrigatório informar observação.');
-      const result = registerDelivery(id, observation, getState().currentUser);
+      const result = registerDelivery(Number(button.dataset.receiveDelivery), observation, getState().currentUser);
       if (!result) return;
       notifyAudit('DELIVERY_RECEIVED', result.keyword);
       alert('Entrega registrada e notificação disparada (simulada).');
@@ -93,8 +90,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-toggle-truck]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = Number(button.dataset.toggleTruck);
-      const result = toggleRecurringTruck(id, getState().currentUser);
+      const result = toggleRecurringTruck(Number(button.dataset.toggleTruck), getState().currentUser);
       if (!result) return;
       notifyAudit('TRUCK_FLOW', `${result.truck.label} - ${result.action}`);
       alert(`${result.action} registrada para ${result.truck.label}.`);
@@ -104,8 +100,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-toggle-employee-car]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = Number(button.dataset.toggleEmployeeCar);
-      const result = toggleEmployeeCar(id, getState().currentUser);
+      const result = toggleEmployeeCar(Number(button.dataset.toggleEmployeeCar), getState().currentUser);
       if (!result) return;
       notifyAudit('EMPLOYEE_CAR_FLOW', `${result.car.plate} - ${result.action}`);
       alert(`${result.action} registrada para ${result.car.employee}.`);
@@ -115,10 +110,9 @@ function wireEvents() {
 
   document.querySelectorAll('[data-company-exit]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = Number(button.dataset.companyExit);
       const driver = prompt('Nome do motorista:');
       const kmOut = Number(prompt('KM de saída:'));
-      const result = registerCompanyCarExit(id, driver || '', kmOut, getState().currentUser);
+      const result = registerCompanyCarExit(Number(button.dataset.companyExit), driver || '', kmOut, getState().currentUser);
       if (result.error) return alert(result.error);
       notifyAudit('COMPANY_CAR_EXIT', `${result.car.plate} - KM ${kmOut}`);
       alert('Saída registrada com KM.');
@@ -128,9 +122,8 @@ function wireEvents() {
 
   document.querySelectorAll('[data-company-return]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = Number(button.dataset.companyReturn);
       const kmIn = Number(prompt('KM de retorno:'));
-      const result = registerCompanyCarReturn(id, kmIn, getState().currentUser);
+      const result = registerCompanyCarReturn(Number(button.dataset.companyReturn), kmIn, getState().currentUser);
       if (result.error) return alert(result.error);
       notifyAudit('COMPANY_CAR_RETURN', `${result.car.plate} - KM ${kmIn}`);
       alert('Retorno registrado com sucesso.');
@@ -138,12 +131,72 @@ function wireEvents() {
     });
   });
 
-  const form = document.getElementById('formConsulta');
-  if (form) {
-    form.addEventListener('submit', (event) => {
+  const formConsulta = document.getElementById('formConsulta');
+  if (formConsulta) {
+    formConsulta.addEventListener('submit', (event) => {
       event.preventDefault();
-      const values = Object.fromEntries(new FormData(form).entries());
+      const values = formValues(formConsulta);
       queryResult = queryHistory(values.document, values.plate);
+      render();
+    });
+  }
+
+  const formPessoa = document.getElementById('formPessoa');
+  if (formPessoa) {
+    formPessoa.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addPerson(formValues(formPessoa));
+      notifyAudit('PERSON_CREATE');
+      alert('Pessoa cadastrada com sucesso.');
+      formPessoa.reset();
+      render();
+    });
+  }
+
+  const formVisita = document.getElementById('formVisita');
+  if (formVisita) {
+    formVisita.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addScheduledVisit(formValues(formVisita));
+      notifyAudit('SCHEDULED_VISIT_CREATE');
+      alert('Visita agendada cadastrada com sucesso.');
+      formVisita.reset();
+      render();
+    });
+  }
+
+  const formVehicleRegistry = document.getElementById('formVehicleRegistry');
+  if (formVehicleRegistry) {
+    formVehicleRegistry.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addVehicle(formValues(formVehicleRegistry));
+      notifyAudit('VEHICLE_CREATE');
+      alert('Veículo cadastrado com sucesso.');
+      formVehicleRegistry.reset();
+      render();
+    });
+  }
+
+  const formUser = document.getElementById('formUser');
+  if (formUser) {
+    formUser.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addUser(formValues(formUser));
+      notifyAudit('USER_CREATE');
+      alert('Usuário cadastrado com sucesso.');
+      formUser.reset();
+      render();
+    });
+  }
+
+  const formEntrega = document.getElementById('formEntrega');
+  if (formEntrega) {
+    formEntrega.addEventListener('submit', (event) => {
+      event.preventDefault();
+      addDeliveryPlan(formValues(formEntrega));
+      notifyAudit('DELIVERY_PLAN_CREATE');
+      alert('Entrega futura cadastrada com sucesso.');
+      formEntrega.reset();
       render();
     });
   }
