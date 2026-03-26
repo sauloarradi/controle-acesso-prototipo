@@ -1,146 +1,148 @@
 import { dashboardTemplate } from './modules/dashboard.js';
 import {
-  addDelivery,
-  addPerson,
-  addUser,
-  addVehicle,
-  autoCheckinFirstScheduled,
+  autoCheckinVisit,
+  getOverdueDeliveries,
   getState,
   getTodayDeliveries,
   queryHistory,
+  registerCompanyCarExit,
+  registerCompanyCarReturn,
   registerDelivery,
-  registerVisitExit
+  registerVisitExit,
+  toggleEmployeeCar,
+  toggleRecurringTruck
 } from './services/state.js';
 import { notifyAudit } from './services/audit-service.js';
 
-let activeSection = 'principal';
+let activeScreen = 'principal';
 let queryResult = [];
 
 function updateClock() {
   const now = new Date();
-  const time = document.getElementById('clockTime');
-  const date = document.getElementById('clockDate');
-  if (!time || !date) return;
-
-  time.textContent = now.toLocaleTimeString('pt-BR');
-  date.textContent = now.toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
+  const t = document.getElementById('clockTime');
+  const d = document.getElementById('clockDate');
+  if (!t || !d) return;
+  t.textContent = now.toLocaleTimeString('pt-BR');
+  d.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 function render() {
   const state = getState();
   const todayDeliveries = getTodayDeliveries();
-  document.getElementById('app').innerHTML = dashboardTemplate({ state, todayDeliveries, activeSection, queryResult });
+  const overdueDeliveries = getOverdueDeliveries();
+  document.getElementById('app').innerHTML = dashboardTemplate({
+    state,
+    activeScreen,
+    todayDeliveries,
+    overdueDeliveries,
+    queryResult
+  });
   updateClock();
   wireEvents();
-}
-
-function formDataToObject(form) {
-  return Object.fromEntries(new FormData(form).entries());
 }
 
 function wireEvents() {
   document.querySelectorAll('.nav-btn').forEach((button) => {
     button.addEventListener('click', () => {
-      activeSection = button.dataset.nav;
+      activeScreen = button.dataset.screen;
       render();
     });
   });
 
-  const autoBtn = document.getElementById('btnAutoCheckin');
-  if (autoBtn) {
-    autoBtn.addEventListener('click', () => {
-      const visit = autoCheckinFirstScheduled();
-      if (!visit) {
-        alert('Não há visitas programadas para entrada automática.');
-        return;
-      }
-      notifyAudit('VISIT_AUTO_ENTRY', visit.name);
-      alert(`Entrada registrada para ${visit.name} e movida para visitas em andamento.`);
+  document.querySelectorAll('[data-open-screen]').forEach((button) => {
+    button.addEventListener('click', () => {
+      activeScreen = button.dataset.openScreen;
       render();
     });
-  }
+  });
+
+  document.querySelectorAll('[data-auto-checkin]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const visitId = Number(button.dataset.autoCheckin);
+      const created = autoCheckinVisit(visitId, getState().currentUser);
+      if (!created) return;
+      notifyAudit('VISIT_AUTO_ENTRY', created.name);
+      alert(`Entrada automática registrada para ${created.name}.`);
+      render();
+    });
+  });
 
   document.querySelectorAll('[data-exit-visit]').forEach((button) => {
     button.addEventListener('click', () => {
       const visitId = Number(button.dataset.exitVisit);
-      const visit = registerVisitExit(visitId, getState().currentUser);
-      if (!visit) return;
-      notifyAudit('VISIT_EXIT', visit.name);
-      alert(`Saída registrada: ${visit.name}. Usuário e horário foram salvos.`);
+      const closed = registerVisitExit(visitId, getState().currentUser);
+      if (!closed) return;
+      notifyAudit('VISIT_EXIT', closed.name);
+      alert(`Saída registrada para ${closed.name}.`);
       render();
     });
   });
 
-  document.querySelectorAll('[data-delivery-received]').forEach((button) => {
+  document.querySelectorAll('[data-receive-delivery]').forEach((button) => {
     button.addEventListener('click', () => {
-      const deliveryId = Number(button.dataset.deliveryReceived);
-      const observation = prompt('Observação do recebimento:') || '';
-      const delivery = registerDelivery(deliveryId, observation, getState().currentUser);
-      if (!delivery) return;
-      notifyAudit('DELIVERY_RECEIVED', delivery.keyword);
-      alert('Entrega recebida registrada com usuário, data/hora e observação. E-mail: simulado.');
+      const id = Number(button.dataset.receiveDelivery);
+      const observation = prompt('Observação do recebimento (obrigatório):');
+      if (!observation) return alert('É obrigatório informar observação.');
+      const result = registerDelivery(id, observation, getState().currentUser);
+      if (!result) return;
+      notifyAudit('DELIVERY_RECEIVED', result.keyword);
+      alert('Entrega registrada e notificação disparada (simulada).');
       render();
     });
   });
 
-  const formPessoa = document.getElementById('formPessoa');
-  if (formPessoa) {
-    formPessoa.addEventListener('submit', (event) => {
-      event.preventDefault();
-      addPerson(formDataToObject(formPessoa));
-      notifyAudit('PERSON_CREATE');
-      alert('Pessoa cadastrada com sucesso.');
-      formPessoa.reset();
+  document.querySelectorAll('[data-toggle-truck]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.toggleTruck);
+      const result = toggleRecurringTruck(id, getState().currentUser);
+      if (!result) return;
+      notifyAudit('TRUCK_FLOW', `${result.truck.label} - ${result.action}`);
+      alert(`${result.action} registrada para ${result.truck.label}.`);
       render();
     });
-  }
+  });
 
-  const formVeiculo = document.getElementById('formVeiculo');
-  if (formVeiculo) {
-    formVeiculo.addEventListener('submit', (event) => {
-      event.preventDefault();
-      addVehicle(formDataToObject(formVeiculo));
-      notifyAudit('VEHICLE_CREATE');
-      alert('Veículo cadastrado com sucesso.');
-      formVeiculo.reset();
+  document.querySelectorAll('[data-toggle-employee-car]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.toggleEmployeeCar);
+      const result = toggleEmployeeCar(id, getState().currentUser);
+      if (!result) return;
+      notifyAudit('EMPLOYEE_CAR_FLOW', `${result.car.plate} - ${result.action}`);
+      alert(`${result.action} registrada para ${result.car.employee}.`);
       render();
     });
-  }
+  });
 
-  const formEntrega = document.getElementById('formEntrega');
-  if (formEntrega) {
-    formEntrega.addEventListener('submit', (event) => {
-      event.preventDefault();
-      addDelivery(formDataToObject(formEntrega));
-      notifyAudit('DELIVERY_CREATE');
-      alert('Entrega futura cadastrada com sucesso.');
-      formEntrega.reset();
+  document.querySelectorAll('[data-company-exit]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.companyExit);
+      const driver = prompt('Nome do motorista:');
+      const kmOut = Number(prompt('KM de saída:'));
+      const result = registerCompanyCarExit(id, driver || '', kmOut, getState().currentUser);
+      if (result.error) return alert(result.error);
+      notifyAudit('COMPANY_CAR_EXIT', `${result.car.plate} - KM ${kmOut}`);
+      alert('Saída registrada com KM.');
       render();
     });
-  }
+  });
 
-  const formUsuario = document.getElementById('formUsuario');
-  if (formUsuario) {
-    formUsuario.addEventListener('submit', (event) => {
-      event.preventDefault();
-      addUser(formDataToObject(formUsuario));
-      notifyAudit('USER_CREATE');
-      alert('Usuário cadastrado com sucesso.');
-      formUsuario.reset();
+  document.querySelectorAll('[data-company-return]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.companyReturn);
+      const kmIn = Number(prompt('KM de retorno:'));
+      const result = registerCompanyCarReturn(id, kmIn, getState().currentUser);
+      if (result.error) return alert(result.error);
+      notifyAudit('COMPANY_CAR_RETURN', `${result.car.plate} - KM ${kmIn}`);
+      alert('Retorno registrado com sucesso.');
       render();
     });
-  }
+  });
 
-  const formConsulta = document.getElementById('formConsulta');
-  if (formConsulta) {
-    formConsulta.addEventListener('submit', (event) => {
+  const form = document.getElementById('formConsulta');
+  if (form) {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const values = formDataToObject(formConsulta);
+      const values = Object.fromEntries(new FormData(form).entries());
       queryResult = queryHistory(values.document, values.plate);
       render();
     });
