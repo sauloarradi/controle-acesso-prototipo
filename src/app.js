@@ -48,11 +48,28 @@ function render() {
   wireEvents();
 }
 
+function openModal(id){ const m=document.getElementById(id); if(m) m.style.display='flex'; }
+function closeModal(id){ const m=document.getElementById(id); if(m) m.style.display='none'; }
+
 function wireEvents() {
   document.querySelectorAll('.nav-btn,[data-open-screen]').forEach((button) => {
     button.addEventListener('click', () => {
       activeScreen = button.dataset.screen || button.dataset.openScreen;
       render();
+    });
+  });
+
+  document.querySelectorAll('[data-open-modal]').forEach((button) => {
+    button.addEventListener('click', () => openModal(button.dataset.openModal));
+  });
+
+  document.querySelectorAll('[data-close-modal]').forEach((button) => {
+    button.addEventListener('click', () => closeModal(button.dataset.closeModal));
+  });
+
+  document.querySelectorAll('.modal').forEach((modal) => {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) modal.style.display = 'none';
     });
   });
 
@@ -141,26 +158,39 @@ function wireEvents() {
     });
   }
 
-  const formPessoa = document.getElementById('formPessoa');
-  if (formPessoa) {
-    formPessoa.addEventListener('submit', (event) => {
+  const formPessoaVisita = document.getElementById('formPessoaVisita');
+  if (formPessoaVisita) {
+    formPessoaVisita.addEventListener('submit', (event) => {
       event.preventDefault();
-      addPerson(formValues(formPessoa));
-      notifyAudit('PERSON_CREATE');
-      alert('Pessoa cadastrada com sucesso.');
-      formPessoa.reset();
-      render();
-    });
-  }
-
-  const formVisita = document.getElementById('formVisita');
-  if (formVisita) {
-    formVisita.addEventListener('submit', (event) => {
-      event.preventDefault();
-      addScheduledVisit(formValues(formVisita));
-      notifyAudit('SCHEDULED_VISIT_CREATE');
-      alert('Visita agendada cadastrada com sucesso.');
-      formVisita.reset();
+      const values = formValues(formPessoaVisita);
+      if (values.registerType === 'VISITA_AGENDADA') {
+        addScheduledVisit({
+          name: values.name,
+          document: values.document,
+          visitType: values.type === 'ENTREVISTA' ? 'ENTREVISTA' : 'VISITA',
+          sector: values.sector,
+          responsible: values.responsible,
+          company: values.company,
+          photoUrl: values.photoUrl,
+          scheduledAt: values.scheduledAt || '--:--'
+        });
+        notifyAudit('SCHEDULED_VISIT_CREATE');
+        alert('Visita agendada cadastrada com sucesso.');
+      } else {
+        addPerson({
+          type: values.type === 'ENTREVISTA' ? 'VISITANTE' : values.type,
+          name: values.name,
+          cpf: values.document,
+          rg: '',
+          company: values.company,
+          photoUrl: values.photoUrl,
+          sector: values.sector
+        });
+        notifyAudit('PERSON_CREATE');
+        alert('Pessoa cadastrada com sucesso.');
+      }
+      formPessoaVisita.reset();
+      closeModal('modalPessoaVisita');
       render();
     });
   }
@@ -173,6 +203,7 @@ function wireEvents() {
       notifyAudit('VEHICLE_CREATE');
       alert('Veículo cadastrado com sucesso.');
       formVehicleRegistry.reset();
+      closeModal('modalVeiculo');
       render();
     });
   }
@@ -197,6 +228,7 @@ function wireEvents() {
       notifyAudit('DELIVERY_PLAN_CREATE');
       alert('Entrega futura cadastrada com sucesso.');
       formEntrega.reset();
+      closeModal('modalEntrega');
       render();
     });
   }
