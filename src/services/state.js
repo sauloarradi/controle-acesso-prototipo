@@ -17,6 +17,31 @@ export function getState() {
   return state;
 }
 
+export function addPerson(payload) {
+  state.people.push({ id: Date.now(), ...payload });
+}
+
+export function addVehicle(payload) {
+  state.vehicleRegistry.push({ id: Date.now(), ...payload });
+}
+
+export function addUser(payload) {
+  state.users.push({ id: Date.now(), ...payload, active: true });
+}
+
+export function addScheduledVisit(payload) {
+  state.scheduledVisits.push({ id: Date.now(), ...payload });
+}
+
+export function addDeliveryPlan(payload) {
+  state.deliveries.push({
+    id: Date.now(),
+    ...payload,
+    status: 'AGENDADA',
+    observation: payload.observation || ''
+  });
+}
+
 export function getTodayDeliveries() {
   return state.deliveries.filter((d) => d.status === 'AGENDADA' && isDateInTodayOrPeriod(d.expectedStart, d.expectedEnd));
 }
