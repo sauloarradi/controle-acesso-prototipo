@@ -1,36 +1,34 @@
 # Sistema de Controle de Acesso (Portaria)
 
-Protótipo funcional alinhado ao documento de requisitos da portaria.
+Protótipo funcional com foco operacional para portaria, entrevistas, entregas e veículos da Rodoin.
 
-## O que está funcionando nesta versão
+## Módulos disponíveis
 
-- Tela principal com:
-  - Visitas programadas;
-  - Visitas em andamento (nome, horário de entrada, tempo de permanência e setor);
-  - Entregas do dia atual (com filtro por data/período);
-  - Botão de entrada automática e saída com auditoria.
-- Cadastro de pessoas: funcionário, fornecedor e visitante (com campo de foto URL).
-- Cadastro de veículos: próprio/terceiro e vínculo com funcionário.
-- Cadastro de entregas: data única ou período, com registro de recebimento.
-- Cadastro de usuários.
-- Tela de consulta por CPF/RG ou placa para histórico de visitas (entrada/saída).
+- Tela principal (resumo operacional clicável).
+- Tela de entregas (com destaque de entregas atrasadas em vermelho).
+- Tela de visitantes (dividida em entrevistas e outras visitas, com entrada automática por visitante agendado).
+- Tela de veículos (caminhões recorrentes, carros de funcionários e carros da empresa com controle de KM).
+- Tela de consulta por CPF/placa com histórico consolidado.
 
-## Estrutura do projeto
+## Regras de negócio implementadas
+
+- Entrada automática de visitante agendado com gravação de usuário e horário.
+- Registro de saída de visitante com histórico.
+- Registro de entrega com observação obrigatória.
+- Fluxos rápidos para caminhões recorrentes (açúcar e entrega SP).
+- Funcionário: entrada/saída simplificada do carro.
+- Carro da empresa: exige KM de saída e retorno, validando retorno > saída.
+
+## Estrutura
 
 ```text
-.
-├── index.html
-└── src
-    ├── app.js
-    ├── data
-    │   └── mock-data.js
-    ├── modules
-    │   ├── dashboard.js
-    │   └── modals.js
-    ├── services
-    │   ├── audit-service.js
-    │   └── state.js
-    └── styles
-        ├── components.css
-        ├── layout.css
-        └── tokens.css
+index.html
+src/
+  app.js
+  data/mock-data.js
+  modules/dashboard.js
+  services/audit-service.js
+  services/state.js
+  styles/tokens.css
+  styles/layout.css
+  styles/components.css
