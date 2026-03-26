@@ -1,18 +1,22 @@
-function card(title, body) {
-  return `<article class="panel"><div class="panel-header">${title}</div><div class="panel-content">${body}</div></article>`;
+nction renderList(items, renderer, empty = 'Sem registros') {
+  if (!items.length) return `<div class="item"><p>${empty}</p></div>`;
+  return items.map((i) => `<div class="item">${renderer(i)}</div>`).join('');
 }
 
-function renderList(items, mapper, emptyMessage = 'Sem registros') {
-  if (!items.length) return `<div class="item"><p>${emptyMessage}</p></div>`;
-  return items.map((item) => `<div class="item">${mapper(item)}</div>`).join('');
+function overdueClass(delivery, overdueIds) {
+  return overdueIds.includes(delivery.id) ? 'item overdue' : 'item';
 }
 
-export function dashboardTemplate({ state, todayDeliveries, activeSection, queryResult }) {
+export function dashboardTemplate({ state, activeScreen, todayDeliveries, overdueDeliveries, queryResult }) {
+  const overdueIds = overdueDeliveries.map((d) => d.id);
+  const interviewVisits = state.scheduledVisits.filter((v) => v.visitType === 'ENTREVISTA');
+  const otherVisits = state.scheduledVisits.filter((v) => v.visitType !== 'ENTREVISTA');
+
   return `
 <div class="app">
   <aside class="sidebar">
-    <h1>🛡️ Controle de Acesso</h1>
-    <p>Protótipo funcional alinhado ao documento da portaria.</p>
+    <h1>🛡️ Portaria Rodoin</h1>
+    <p>Sistema operacional de controle de acesso.</p>
 
     <div class="clock">
       <strong id="clockTime">--:--:--</strong>
@@ -20,156 +24,135 @@ export function dashboardTemplate({ state, todayDeliveries, activeSection, query
     </div>
 
     <div class="btn-list nav-list">
-      <button class="btn btn-primary nav-btn" data-nav="principal">Tela principal</button>
-      <button class="btn btn-primary nav-btn" data-nav="pessoas">Cadastro pessoas</button>
-      <button class="btn btn-primary nav-btn" data-nav="veiculos">Cadastro veículos</button>
-      <button class="btn btn-primary nav-btn" data-nav="entregas">Cadastro entregas</button>
-      <button class="btn btn-primary nav-btn" data-nav="usuarios">Cadastro usuários</button>
-      <button class="btn btn-primary nav-btn" data-nav="consulta">Consulta CPF/Placa</button>
+      <button class="btn btn-primary nav-btn" data-screen="principal">Tela principal</button>
+      <button class="btn btn-primary nav-btn" data-screen="entregas">Tela de entregas</button>
+      <button class="btn btn-primary nav-btn" data-screen="visitantes">Tela de visitantes</button>
+      <button class="btn btn-primary nav-btn" data-screen="veiculos">Tela de veículos</button>
+      <button class="btn btn-primary nav-btn" data-screen="consulta">Consulta CPF/Placa</button>
     </div>
   </aside>
 
   <main class="main">
     <header class="main-header">
       <div>
-        <h2>${activeSection === 'principal' ? 'Tela Principal' : 'Módulo: ' + activeSection.toUpperCase()}</h2>
+        <h2>${activeScreen === 'principal' ? 'Resumo Operacional' : 'Módulo: ' + activeScreen.toUpperCase()}</h2>
         <p>Usuário logado: ${state.currentUser}</p>
       </div>
-      <span class="status-pill">Sem câmeras • Auditoria ativa</span>
+      <span class="status-pill">Operação ativa</span>
     </header>
 
     <section class="kpi-row">
-      <div class="kpi"><small>Visitas agendadas</small><br><strong>${state.scheduledVisits.length}</strong></div>
-      <div class="kpi"><small>Visitas em andamento</small><br><strong>${state.ongoingVisits.length}</strong></div>
-      <div class="kpi"><small>Entregas do dia atual</small><br><strong>${todayDeliveries.length}</strong></div>
-      <div class="kpi"><small>Pessoas cadastradas</small><br><strong>${state.people.length}</strong></div>
+      <div class="kpi clickable" data-open-screen="visitantes"><small>Visitas agendadas</small><br><strong>${state.scheduledVisits.length}</strong></div>
+      <div class="kpi clickable" data-open-screen="visitantes"><small>Visitas em andamento</small><br><strong>${state.ongoingVisits.length}</strong></div>
+      <div class="kpi clickable" data-open-screen="entregas"><small>Entregas do dia</small><br><strong>${todayDeliveries.length}</strong></div>
+      <div class="kpi clickable" data-open-screen="entregas"><small>Entregas atrasadas</small><br><strong>${overdueDeliveries.length}</strong></div>
     </section>
 
-    <section class="grid section ${activeSection === 'principal' ? 'visible' : ''}" id="section-principal">
-      ${card('📅 Visitas Programadas', `
-        <div class="panel-actions">
-          <button class="btn-lite primary" id="btnAutoCheckin">Registrar entrada automática</button>
-        </div>
-        ${renderList(state.scheduledVisits, (v) => `
-          <h4>${v.name}</h4>
-          <p>Previsto: ${v.scheduledAt} • Setor: ${v.sector}</p>
-          <p>Responsável: ${v.responsible}</p>
-        `, 'Sem visitas programadas')}
-      `)}
+    <section class="grid section ${activeScreen === 'principal' ? 'visible' : ''}">
+      <article class="panel"><div class="panel-header">Visitas (resumo)</div><div class="panel-content">
+        ${renderList(state.scheduledVisits.slice(0, 3), (v) => `<h4>${v.name}</h4><p>${v.visitType} • ${v.scheduledAt}</p>`, 'Sem agendamentos')}
+        <button class="btn-lite primary" data-open-screen="visitantes">Abrir tela de visitantes</button>
+      </div></article>
 
-      ${card('🏢 Visitas em Andamento', `
+      <article class="panel"><div class="panel-header">Entregas (resumo)</div><div class="panel-content">
+        ${renderList(todayDeliveries.slice(0, 3), (d) => `<h4>${d.keyword}</h4><p>${d.destinationSector} • ${d.expectedStart}</p>`, 'Sem entregas do dia')}
+        <button class="btn-lite primary" data-open-screen="entregas">Abrir tela de entregas</button>
+      </div></article>
+
+      <article class="panel"><div class="panel-header">Veículos (resumo)</div><div class="panel-content">
+        <div class="item"><h4>Caminhões recorrentes fora</h4><p>${state.recurringTrucks.filter((t) => t.status === 'FORA').length}</p></div>
+        <div class="item"><h4>Carros empresa em viagem</h4><p>${state.companyCars.filter((c) => c.inTrip).length}</p></div>
+        <button class="btn-lite primary" data-open-screen="veiculos">Abrir tela de veículos</button>
+      </div></article>
+
+      <article class="panel"><div class="panel-header">Consulta</div><div class="panel-content">
+        <div class="item"><h4>CPF / Placa</h4><p>Histórico consolidado de visitas e veículos.</p></div>
+        <button class="btn-lite primary" data-open-screen="consulta">Abrir consulta</button>
+      </div></article>
+    </section>
+
+    <section class="single-section ${activeScreen === 'entregas' ? 'visible' : ''}">
+      <article class="panel"><div class="panel-header">Tela de Entregas</div><div class="panel-content">
+        ${renderList(state.deliveries, (d) => `
+          <div class="${overdueClass(d, overdueIds)}">
+            <h4>${d.keyword}</h4>
+            <p>Status: ${d.status} • Setor: ${d.destinationSector}</p>
+            <p>Período: ${d.expectedStart}${d.expectedEnd ? ' até ' + d.expectedEnd : ''}</p>
+            ${d.status === 'AGENDADA' ? `<button class="btn-lite" data-receive-delivery="${d.id}">Registrar entrega</button>` : '<p>Entrega já recebida</p>'}
+          </div>
+        `)}
+      </div></article>
+    </section>
+
+    <section class="single-section ${activeScreen === 'visitantes' ? 'visible' : ''}">
+      <article class="panel"><div class="panel-header">Tela de Visitantes</div><div class="panel-content split-two">
+        <div>
+          <h3>Entrevistas de emprego</h3>
+          ${renderList(interviewVisits, (v) => `
+            <h4>${v.name}</h4>
+            <p>${v.scheduledAt} • ${v.responsible}</p>
+            <button class="btn-lite" data-auto-checkin="${v.id}">Entrada automática</button>
+          `)}
+        </div>
+        <div>
+          <h3>Outros tipos de visita</h3>
+          ${renderList(otherVisits, (v) => `
+            <h4>${v.name}</h4>
+            <p>${v.visitType} • ${v.scheduledAt}</p>
+            <button class="btn-lite" data-auto-checkin="${v.id}">Entrada automática</button>
+          `)}
+        </div>
+      </div></article>
+
+      <article class="panel"><div class="panel-header">Visitantes em andamento</div><div class="panel-content">
         ${renderList(state.ongoingVisits, (v) => `
           <h4>${v.name}</h4>
-          <p>Entrada: ${v.entryAt} • Permanência: ${v.duration}</p>
-          <p>Setor: ${v.sector}</p>
+          <p>Entrada: ${v.entryAt} • Setor: ${v.sector}</p>
           <button class="btn-lite" data-exit-visit="${v.id}">Registrar saída</button>
-        `, 'Sem visitas em andamento')}
-      `)}
-
-      ${card('📦 Entregas Agendadas (Dia Atual)', `
-        ${renderList(todayDeliveries, (d) => `
-          <h4>${d.keyword}</h4>
-          <p>Setor: ${d.destinationSector} • ${d.supplier || 'Sem fornecedor'}</p>
-          <p>Período: ${d.expectedStart}${d.expectedEnd ? ' até ' + d.expectedEnd : ''}</p>
-          <button class="btn-lite" data-delivery-received="${d.id}">Registrar entrega</button>
-        `, 'Sem entregas previstas para hoje')}
-      `)}
-
-      ${card('🧾 Cadastros e Operações', `
-        <div class="item"><h4>Cadastro de pessoas</h4><p>Funcionário, fornecedor e visitante com foto.</p></div>
-        <div class="item"><h4>Cadastro de veículos</h4><p>Próprio/terceiro + relação veículo x funcionário.</p></div>
-        <div class="item"><h4>Cadastro de entregas</h4><p>Entrega futura e por período.</p></div>
-        <div class="item"><h4>Cadastro de usuários</h4><p>Gestão de acessos.</p></div>
-      `)}
+        `, 'Sem visitantes em andamento')}
+      </div></article>
     </section>
 
-    <section class="single-section ${activeSection === 'pessoas' ? 'visible' : ''}" id="section-pessoas">
-      <div class="panel">
-        <div class="panel-header">👤 Cadastro de Pessoas</div>
-        <div class="panel-content">
-          <form id="formPessoa" class="form-grid-3">
-            <div class="field"><label>Tipo *</label><select name="type" required><option>FUNCIONARIO</option><option>FORNECEDOR</option><option>VISITANTE</option></select></div>
-            <div class="field"><label>Nome completo *</label><input name="name" required></div>
-            <div class="field"><label>CPF</label><input name="cpf"></div>
-            <div class="field"><label>RG</label><input name="rg"></div>
-            <div class="field"><label>Empresa (se aplicável)</label><input name="company"></div>
-            <div class="field"><label>Foto URL</label><input name="photo"></div>
-            <div class="field"><label>Setor</label><select name="sector"><option value="">Selecione</option><option>TI</option><option>Financeiro</option><option>RH</option><option>Comercial</option><option>Almoxarifado</option></select></div>
-            <div class="field field-full"><button class="btn btn-success" type="submit">Salvar pessoa</button></div>
-          </form>
-          <hr>
-          ${renderList(state.people, (p) => `<h4>${p.name}</h4><p>${p.type} • ${p.cpf || p.rg || 'Sem documento'} ${p.company ? '• ' + p.company : ''}</p>`)}
-        </div>
-      </div>
+    <section class="single-section ${activeScreen === 'veiculos' ? 'visible' : ''}">
+      <article class="panel"><div class="panel-header">Facilitadores - caminhões recorrentes</div><div class="panel-content">
+        ${renderList(state.recurringTrucks, (t) => `
+          <h4>${t.label} (${t.plate})</h4>
+          <p>Rota: ${t.route} • Status: ${t.status}</p>
+          <button class="btn-lite" data-toggle-truck="${t.id}">${t.status === 'PARADO' ? 'Registrar saída' : 'Registrar retorno'}</button>
+        `)}
+      </div></article>
+
+      <article class="panel"><div class="panel-header">Carros de funcionários (entrada/saída)</div><div class="panel-content">
+        ${renderList(state.employeeCars, (c) => `
+          <h4>${c.employee} (${c.plate})</h4>
+          <p>Status: ${c.inside ? 'DENTRO' : 'FORA'} • Última entrada: ${c.lastEntryAt || '-'}</p>
+          <button class="btn-lite" data-toggle-employee-car="${c.id}">${c.inside ? 'Registrar saída' : 'Registrar entrada'}</button>
+        `)}
+      </div></article>
+
+      <article class="panel"><div class="panel-header">Carros da empresa (saída/retorno com KM)</div><div class="panel-content">
+        ${renderList(state.companyCars, (c) => `
+          <h4>${c.name} (${c.plate})</h4>
+          <p>Status: ${c.inTrip ? 'EM VIAGEM' : 'DISPONÍVEL'} • KM saída: ${c.kmOut ?? '-'} • KM retorno: ${c.kmIn ?? '-'}</p>
+          ${c.inTrip ? `<button class="btn-lite" data-company-return="${c.id}">Registrar retorno</button>` : `<button class="btn-lite" data-company-exit="${c.id}">Registrar saída</button>`}
+        `)}
+      </div></article>
     </section>
 
-    <section class="single-section ${activeSection === 'veiculos' ? 'visible' : ''}" id="section-veiculos">
-      <div class="panel">
-        <div class="panel-header">🚗 Cadastro de Veículos + vínculo com funcionário</div>
-        <div class="panel-content">
-          <form id="formVeiculo" class="form-grid-3">
-            <div class="field"><label>Tipo *</label><select name="type" required><option>PROPRIO</option><option>TERCEIRO</option></select></div>
-            <div class="field"><label>Placa *</label><input name="plate" required></div>
-            <div class="field"><label>Modelo</label><input name="model"></div>
-            <div class="field"><label>Proprietário</label><input name="owner"></div>
-            <div class="field"><label>Foto URL</label><input name="photo"></div>
-            <div class="field"><label>Funcionário vinculado</label><input name="employee"></div>
-            <div class="field field-full"><button class="btn btn-success" type="submit">Salvar veículo</button></div>
-          </form>
-          <hr>
-          ${renderList(state.vehicles, (v) => `<h4>${v.plate}</h4><p>${v.type} • ${v.model || '-'} • ${v.employee || 'Sem vínculo'}</p>`) }
-        </div>
-      </div>
-    </section>
-
-    <section class="single-section ${activeSection === 'entregas' ? 'visible' : ''}" id="section-entregas">
-      <div class="panel">
-        <div class="panel-header">📦 Cadastro de Entregas (data única ou período)</div>
-        <div class="panel-content">
-          <form id="formEntrega" class="form-grid-3">
-            <div class="field"><label>Palavra-chave *</label><input name="keyword" required></div>
-            <div class="field"><label>Setor destino *</label><input name="destinationSector" required></div>
-            <div class="field"><label>Fornecedor/Transportadora</label><input name="supplier"></div>
-            <div class="field"><label>Data início *</label><input name="expectedStart" type="date" required></div>
-            <div class="field"><label>Data fim</label><input name="expectedEnd" type="date"></div>
-            <div class="field"><label>Enviar e-mail no recebimento</label><select name="sendEmail"><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
-            <div class="field field-full"><button class="btn btn-success" type="submit">Salvar entrega futura</button></div>
-          </form>
-          <hr>
-          ${renderList(state.deliveries, (d) => `<h4>${d.keyword}</h4><p>${d.status} • ${d.expectedStart}${d.expectedEnd ? ' até ' + d.expectedEnd : ''}</p>`) }
-        </div>
-      </div>
-    </section>
-
-    <section class="single-section ${activeSection === 'usuarios' ? 'visible' : ''}" id="section-usuarios">
-      <div class="panel">
-        <div class="panel-header">🔐 Cadastro de Usuários</div>
-        <div class="panel-content">
-          <form id="formUsuario" class="form-grid-3">
-            <div class="field"><label>Nome *</label><input name="name" required></div>
-            <div class="field"><label>E-mail *</label><input name="email" type="email" required></div>
-            <div class="field"><label>Perfil *</label><select name="role" required><option>ADMIN</option><option>PORTARIA</option><option>SEGURANCA</option></select></div>
-            <div class="field field-full"><button class="btn btn-success" type="submit">Salvar usuário</button></div>
-          </form>
-          <hr>
-          ${renderList(state.users, (u) => `<h4>${u.name}</h4><p>${u.email} • ${u.role}</p>`) }
-        </div>
-      </div>
-    </section>
-
-    <section class="single-section ${activeSection === 'consulta' ? 'visible' : ''}" id="section-consulta">
-      <div class="panel">
-        <div class="panel-header">🔎 Consulta por CPF ou Placa</div>
-        <div class="panel-content">
-          <form id="formConsulta" class="form-grid-3">
-            <div class="field"><label>CPF/RG</label><input name="document"></div>
-            <div class="field"><label>Placa</label><input name="plate"></div>
-            <div class="field"><label>&nbsp;</label><button class="btn btn-primary" type="submit">Consultar histórico</button></div>
-          </form>
-          <hr>
-          ${renderList(queryResult || [], (r) => `<h4>${r.name}</h4><p>Entrada: ${r.entryAt} • Saída: ${r.exitAt} • Setor: ${r.sector}</p><p>Usuário saída: ${r.user}</p>`, 'Sem resultados para a consulta atual')}
-        </div>
-      </div>
+    <section class="single-section ${activeScreen === 'consulta' ? 'visible' : ''}">
+      <article class="panel"><div class="panel-header">Consulta por CPF/Placa</div><div class="panel-content">
+        <form id="formConsulta" class="form-grid-3">
+          <div class="field"><label>CPF/RG</label><input name="document" /></div>
+          <div class="field"><label>Placa</label><input name="plate" /></div>
+          <div class="field"><label>&nbsp;</label><button class="btn btn-primary" type="submit">Consultar</button></div>
+        </form>
+        <hr>
+        ${renderList(queryResult || [], (r) => `
+          <h4>${r.kind} • ${r.name || r.label || '-'}</h4>
+          <p>Placa: ${r.plate || '-'} • Ação: ${r.action || 'Entrada/Saída visita'}</p>
+          <p>Registro: ${r.dateTime || (r.entryAt + ' / ' + r.exitAt)} • Usuário: ${r.user}</p>
+        `, 'Sem resultados para a consulta atual')}
+      </div></article>
     </section>
   </main>
 </div>
