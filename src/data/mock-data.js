@@ -1,37 +1,36 @@
-export const employeesBySector = {
-  TI: ['Carlos Mendes', 'Juliana Prado'],
-  Financeiro: ['Maria Costa', 'Rafael Santos'],
-  RH: ['Ana Paula Lima', 'Fernanda Silva'],
-  Comercial: ['José Souza', 'Roberto Vilela'],
-  Almoxarifado: ['Lucas Rocha', 'Daniel Farias']
-};
-
 export const initialState = {
-  people: [
-    { id: 1, type: 'FUNCIONARIO', name: 'Carlos Mendes', cpf: '111.111.111-11', rg: '', company: 'Rodoin', photo: '', sector: 'TI' },
-    { id: 2, type: 'FORNECEDOR', name: 'Trans Lovato', cpf: '', rg: '', company: 'Trans Lovato', photo: '', sector: '' },
-    { id: 3, type: 'VISITANTE', name: 'Patrícia Oliveira', cpf: '222.222.222-22', rg: 'MG-10.222.111', company: 'Mercado Livre', photo: '', sector: '' }
-  ],
-  users: [
-    { id: 1, name: 'Saulo Admin', email: 'admin@empresa.com', role: 'ADMIN', active: true },
-    { id: 2, name: 'Portaria 01', email: 'portaria@empresa.com', role: 'PORTARIA', active: true }
-  ],
-  vehicles: [
-    { id: 1, type: 'PROPRIO', plate: 'ABC1D23', model: 'Corolla', photo: '', owner: 'Rodoin', employee: 'Carlos Mendes' },
-    { id: 2, type: 'TERCEIRO', plate: 'XYZ9K88', model: 'Caminhão', photo: '', owner: 'Trans Lovato', employee: '' }
-  ],
+  currentUser: 'Portaria 01',
   scheduledVisits: [
-    { id: 1, name: 'Patrícia Oliveira', document: '222.222.222-22', company: 'Mercado Livre', sector: 'Financeiro', responsible: 'Maria Costa', reason: 'Apresentação proposta', vehiclePlate: '', scheduledAt: '09:30' },
-    { id: 2, name: 'Eduardo Nunes', document: '333.333.333-33', company: 'DELL', sector: 'TI', responsible: 'Carlos Mendes', reason: 'Entrega notebooks', vehiclePlate: 'TRK1234', scheduledAt: '14:15' }
+    { id: 1, name: 'Mariana Souza', document: '111.222.333-44', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Ana Paula Lima', scheduledAt: '08:30' },
+    { id: 2, name: 'João Ribeiro', document: '555.666.777-88', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Fernanda Silva', scheduledAt: '09:00' },
+    { id: 3, name: 'Carlos Prado', document: '222.333.444-55', visitType: 'FORNECEDOR', sector: 'Compras', responsible: 'Rafael Santos', scheduledAt: '10:30' }
   ],
-  ongoingVisits: [
-    { id: 11, name: 'Ricardo Gomes', sector: 'TI', responsible: 'Carlos Mendes', entryAt: '08:50', duration: '2h 05min' }
-  ],
+  ongoingVisits: [],
   visitHistory: [],
+
   deliveries: [
-    { id: 1, keyword: 'Mouse sem fio', destinationSector: 'TI', supplier: 'Mercado Livre', expectedStart: '2026-03-24', expectedEnd: '', status: 'AGENDADA', observation: '', receivedAt: '', receivedBy: '' },
-    { id: 2, keyword: 'Computadores DELL', destinationSector: 'TI', supplier: 'Trans Lovato', expectedStart: '2026-03-24', expectedEnd: '2026-03-27', status: 'AGENDADA', observation: '', receivedAt: '', receivedBy: '' },
-    { id: 3, keyword: 'Correspondência SEDEX', destinationSector: 'RH', supplier: 'Correios', expectedStart: '2026-03-24', expectedEnd: '', status: 'AGENDADA', observation: '', receivedAt: '', receivedBy: '' }
+    { id: 1, keyword: 'Mouse sem fio', destinationSector: 'TI', supplier: 'Mercado Livre', expectedStart: '2026-03-26', expectedEnd: '', status: 'AGENDADA', observation: '' },
+    { id: 2, keyword: 'Computadores DELL', destinationSector: 'TI', supplier: 'Trans Lovato', expectedStart: '2026-03-24', expectedEnd: '2026-03-25', status: 'AGENDADA', observation: '' },
+    { id: 3, keyword: 'Correspondência SEDEX', destinationSector: 'RH', supplier: 'Correios', expectedStart: '2026-03-26', expectedEnd: '', status: 'AGENDADA', observation: '' }
   ],
-  currentUser: 'Portaria 01'
+  deliveryHistory: [],
+
+  recurringTrucks: [
+    { id: 1, label: 'Caminhão Açúcar (Rodoin)', plate: 'ROD1234', route: 'Buscar açúcar', status: 'PARADO' },
+    { id: 2, label: 'Caminhão Entrega SP (Rodoin)', plate: 'ROD5678', route: 'Entrega SP', status: 'PARADO' }
+  ],
+
+  employeeCars: [
+    { id: 1, employee: 'Carlos Mendes', plate: 'ABC1D23', inside: false, lastEntryAt: '', lastExitAt: '' },
+    { id: 2, employee: 'Juliana Prado', plate: 'DEF2E34', inside: true, lastEntryAt: '07:55', lastExitAt: '' }
+  ],
+
+  companyCars: [
+    { id: 1, name: 'Fiorino Entrega Rápida', plate: 'EMP1111', inTrip: false, kmOut: null, kmIn: null, lastDriver: '' },
+    { id: 2, name: 'Saveiro Apoio', plate: 'EMP2222', inTrip: true, kmOut: 45210, kmIn: null, lastDriver: 'Paulo Souza' }
+  ],
+
+  vehicleHistory: [],
+  people: [],
+  users: []
 };
