@@ -5,11 +5,7 @@ Protótipo funcional com foco operacional para portaria, entrevistas, entregas e
 ## Módulos disponíveis
 
 - Tela principal (resumo operacional clicável).
-- Tela de **cadastros**:
-  - Pessoas (funcionário, visitante, fornecedor + foto URL)
-  - Visitas agendadas (incluindo entrevistas)
-  - Veículos
-  - Usuários
+- Tela de **cadastros** com cards (Pessoa/Visita, Entrega, Veículo), onde cada card abre modal específico para evitar poluição visual.
 - Tela de entregas (com destaque de atrasadas em vermelho).
 - Tela de visitantes (entrevistas x outras visitas, com entrada automática).
 - Tela de veículos (caminhões recorrentes, carros de funcionários, carros da empresa com KM).
