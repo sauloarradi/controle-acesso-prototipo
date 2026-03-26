@@ -1,9 +1,21 @@
 export const initialState = {
   currentUser: 'Portaria 01',
+  people: [
+    { id: 1, type: 'FUNCIONARIO', name: 'Carlos Mendes', cpf: '111.111.111-11', rg: '', company: 'Rodoin', photoUrl: '', sector: 'TI' },
+    { id: 2, type: 'VISITANTE', name: 'Mariana Souza', cpf: '111.222.333-44', rg: '', company: 'Candidato', photoUrl: '', sector: 'RH' }
+  ],
+  users: [
+    { id: 1, name: 'Saulo Admin', email: 'admin@empresa.com', role: 'ADMIN', active: true },
+    { id: 2, name: 'Portaria 01', email: 'portaria@empresa.com', role: 'PORTARIA', active: true }
+  ],
+  vehicleRegistry: [
+    { id: 1, type: 'PROPRIO', plate: 'ABC1D23', model: 'Corolla', owner: 'Rodoin', photoUrl: '', employee: 'Carlos Mendes' }
+  ],
+
   scheduledVisits: [
-    { id: 1, name: 'Mariana Souza', document: '111.222.333-44', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Ana Paula Lima', scheduledAt: '08:30' },
-    { id: 2, name: 'João Ribeiro', document: '555.666.777-88', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Fernanda Silva', scheduledAt: '09:00' },
-    { id: 3, name: 'Carlos Prado', document: '222.333.444-55', visitType: 'FORNECEDOR', sector: 'Compras', responsible: 'Rafael Santos', scheduledAt: '10:30' }
+    { id: 1, name: 'Mariana Souza', document: '111.222.333-44', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Ana Paula Lima', company: 'Candidato', photoUrl: '', scheduledAt: '08:30' },
+    { id: 2, name: 'João Ribeiro', document: '555.666.777-88', visitType: 'ENTREVISTA', sector: 'RH', responsible: 'Fernanda Silva', company: 'Candidato', photoUrl: '', scheduledAt: '09:00' },
+    { id: 3, name: 'Carlos Prado', document: '222.333.444-55', visitType: 'FORNECEDOR', sector: 'Compras', responsible: 'Rafael Santos', company: 'TransLovato', photoUrl: '', scheduledAt: '10:30' }
   ],
   ongoingVisits: [],
   visitHistory: [],
@@ -30,7 +42,5 @@ export const initialState = {
     { id: 2, name: 'Saveiro Apoio', plate: 'EMP2222', inTrip: true, kmOut: 45210, kmIn: null, lastDriver: 'Paulo Souza' }
   ],
 
-  vehicleHistory: [],
-  people: [],
-  users: []
+  vehicleHistory: []
 };
