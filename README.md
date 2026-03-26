@@ -5,9 +5,14 @@ Protótipo funcional com foco operacional para portaria, entrevistas, entregas e
 ## Módulos disponíveis
 
 - Tela principal (resumo operacional clicável).
-- Tela de entregas (com destaque de entregas atrasadas em vermelho).
-- Tela de visitantes (dividida em entrevistas e outras visitas, com entrada automática por visitante agendado).
-- Tela de veículos (caminhões recorrentes, carros de funcionários e carros da empresa com controle de KM).
+- Tela de **cadastros**:
+  - Pessoas (funcionário, visitante, fornecedor + foto URL)
+  - Visitas agendadas (incluindo entrevistas)
+  - Veículos
+  - Usuários
+- Tela de entregas (com destaque de atrasadas em vermelho).
+- Tela de visitantes (entrevistas x outras visitas, com entrada automática).
+- Tela de veículos (caminhões recorrentes, carros de funcionários, carros da empresa com KM).
 - Tela de consulta por CPF/placa com histórico consolidado.
 
 ## Regras de negócio implementadas
@@ -18,17 +23,4 @@ Protótipo funcional com foco operacional para portaria, entrevistas, entregas e
 - Fluxos rápidos para caminhões recorrentes (açúcar e entrega SP).
 - Funcionário: entrada/saída simplificada do carro.
 - Carro da empresa: exige KM de saída e retorno, validando retorno > saída.
-
-## Estrutura
-
-```text
-index.html
-src/
-  app.js
-  data/mock-data.js
-  modules/dashboard.js
-  services/audit-service.js
-  services/state.js
-  styles/tokens.css
-  styles/layout.css
-  styles/components.css
+- Principal mantém resumos e abre telas de seção por clique.
