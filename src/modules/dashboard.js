@@ -1,4 +1,4 @@
-nction renderList(items, renderer, empty = 'Sem registros') {
+function renderList(items, renderer, empty = 'Sem registros') {
   if (!items.length) return `<div class="item"><p>${empty}</p></div>`;
   return items.map((i) => `<div class="item">${renderer(i)}</div>`).join('');
 }
