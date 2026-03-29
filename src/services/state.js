@@ -17,6 +17,17 @@ export function getState() {
   return state;
 }
 
+export function authenticate(username, password) {
+  const user = state.users.find((u) => u.username === username && u.password === password && u.active);
+  if (!user) return null;
+  state.currentUser = { id: user.id, name: user.name, role: user.role, username: user.username };
+  return state.currentUser;
+}
+
+export function logout() {
+  state.currentUser = null;
+}
+
 export function addPerson(payload) {
   state.people.push({ id: Date.now(), ...payload });
 }
