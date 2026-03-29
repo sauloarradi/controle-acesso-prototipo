@@ -5,6 +5,7 @@ import {
   addScheduledVisit,
   addUser,
   addVehicle,
+  authenticate,
   autoCheckinVisit,
   getOverdueDeliveries,
   getState,
@@ -52,6 +53,19 @@ function openModal(id){ const m=document.getElementById(id); if(m) m.style.displ
 function closeModal(id){ const m=document.getElementById(id); if(m) m.style.display='none'; }
 
 function wireEvents() {
+
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const values = formValues(loginForm);
+      const user = authenticate(values.username, values.password);
+      if (!user) return alert('Usuário ou senha inválidos.');
+      notifyAudit('LOGIN_SUCCESS', user.username);
+      render();
+    });
+    return;
+  }
   document.querySelectorAll('.nav-btn,[data-open-screen]').forEach((button) => {
     button.addEventListener('click', () => {
       activeScreen = button.dataset.screen || button.dataset.openScreen;
@@ -75,7 +89,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-auto-checkin]').forEach((button) => {
     button.addEventListener('click', () => {
-      const visit = autoCheckinVisit(Number(button.dataset.autoCheckin), getState().currentUser);
+      const visit = autoCheckinVisit(Number(button.dataset.autoCheckin), getState().currentUser?.name || "");
       if (!visit) return;
       notifyAudit('VISIT_AUTO_ENTRY', visit.name);
       alert(`Entrada automática registrada para ${visit.name}.`);
@@ -85,7 +99,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-exit-visit]').forEach((button) => {
     button.addEventListener('click', () => {
-      const visit = registerVisitExit(Number(button.dataset.exitVisit), getState().currentUser);
+      const visit = registerVisitExit(Number(button.dataset.exitVisit), getState().currentUser?.name || "");
       if (!visit) return;
       notifyAudit('VISIT_EXIT', visit.name);
       alert(`Saída registrada para ${visit.name}.`);
@@ -97,7 +111,7 @@ function wireEvents() {
     button.addEventListener('click', () => {
       const observation = prompt('Observação do recebimento (obrigatório):');
       if (!observation) return alert('É obrigatório informar observação.');
-      const result = registerDelivery(Number(button.dataset.receiveDelivery), observation, getState().currentUser);
+      const result = registerDelivery(Number(button.dataset.receiveDelivery), observation, getState().currentUser?.name || "");
       if (!result) return;
       notifyAudit('DELIVERY_RECEIVED', result.keyword);
       alert('Entrega registrada e notificação disparada (simulada).');
@@ -107,7 +121,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-toggle-truck]').forEach((button) => {
     button.addEventListener('click', () => {
-      const result = toggleRecurringTruck(Number(button.dataset.toggleTruck), getState().currentUser);
+      const result = toggleRecurringTruck(Number(button.dataset.toggleTruck), getState().currentUser?.name || "");
       if (!result) return;
       notifyAudit('TRUCK_FLOW', `${result.truck.label} - ${result.action}`);
       alert(`${result.action} registrada para ${result.truck.label}.`);
@@ -117,7 +131,7 @@ function wireEvents() {
 
   document.querySelectorAll('[data-toggle-employee-car]').forEach((button) => {
     button.addEventListener('click', () => {
-      const result = toggleEmployeeCar(Number(button.dataset.toggleEmployeeCar), getState().currentUser);
+      const result = toggleEmployeeCar(Number(button.dataset.toggleEmployeeCar), getState().currentUser?.name || "");
       if (!result) return;
       notifyAudit('EMPLOYEE_CAR_FLOW', `${result.car.plate} - ${result.action}`);
       alert(`${result.action} registrada para ${result.car.employee}.`);
@@ -129,7 +143,7 @@ function wireEvents() {
     button.addEventListener('click', () => {
       const driver = prompt('Nome do motorista:');
       const kmOut = Number(prompt('KM de saída:'));
-      const result = registerCompanyCarExit(Number(button.dataset.companyExit), driver || '', kmOut, getState().currentUser);
+      const result = registerCompanyCarExit(Number(button.dataset.companyExit), driver || '', kmOut, getState().currentUser?.name || "");
       if (result.error) return alert(result.error);
       notifyAudit('COMPANY_CAR_EXIT', `${result.car.plate} - KM ${kmOut}`);
       alert('Saída registrada com KM.');
@@ -140,7 +154,7 @@ function wireEvents() {
   document.querySelectorAll('[data-company-return]').forEach((button) => {
     button.addEventListener('click', () => {
       const kmIn = Number(prompt('KM de retorno:'));
-      const result = registerCompanyCarReturn(Number(button.dataset.companyReturn), kmIn, getState().currentUser);
+      const result = registerCompanyCarReturn(Number(button.dataset.companyReturn), kmIn, getState().currentUser?.name || "");
       if (result.error) return alert(result.error);
       notifyAudit('COMPANY_CAR_RETURN', `${result.car.plate} - KM ${kmIn}`);
       alert('Retorno registrado com sucesso.');
