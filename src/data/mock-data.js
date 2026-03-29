@@ -1,15 +1,15 @@
 export const initialState = {
-  currentUser: 'Portaria 01',
+  currentUser: null,
   people: [
-    { id: 1, type: 'FUNCIONARIO', name: 'Carlos Mendes', cpf: '111.111.111-11', rg: '', company: 'Rodoin', photoUrl: '', sector: 'TI' },
+    { id: 1, type: 'FUNCIONARIO', name: 'Carlos Mendes', cpf: '111.111.111-11', rg: '', company: 'Toffano', photoUrl: '', sector: 'TI' },
     { id: 2, type: 'VISITANTE', name: 'Mariana Souza', cpf: '111.222.333-44', rg: '', company: 'Candidato', photoUrl: '', sector: 'RH' }
   ],
   users: [
-    { id: 1, name: 'Saulo Admin', email: 'admin@empresa.com', role: 'ADMIN', active: true },
-    { id: 2, name: 'Portaria 01', email: 'portaria@empresa.com', role: 'PORTARIA', active: true }
+    { id: 1, username: 'admin', password: '123456', name: 'Saulo Admin', email: 'admin@empresa.com', role: 'PORTARIA', active: true },
+    { id: 2, username: 'rh01', password: '123456', name: 'RH 01', email: 'rh@empresa.com', role: 'RH', active: true }
   ],
   vehicleRegistry: [
-    { id: 1, type: 'PROPRIO', plate: 'ABC1D23', model: 'Corolla', owner: 'Rodoin', photoUrl: '', employee: 'Carlos Mendes' }
+    { id: 1, type: 'PROPRIO', plate: 'ABC1D23', model: 'Corolla', owner: 'Toffano', photoUrl: '', employee: 'Carlos Mendes' }
   ],
 
   scheduledVisits: [
@@ -21,15 +21,15 @@ export const initialState = {
   visitHistory: [],
 
   deliveries: [
-    { id: 1, keyword: 'Mouse sem fio', destinationSector: 'TI', supplier: 'Mercado Livre', expectedStart: '2026-03-26', expectedEnd: '', status: 'AGENDADA', observation: '' },
-    { id: 2, keyword: 'Computadores DELL', destinationSector: 'TI', supplier: 'Trans Lovato', expectedStart: '2026-03-24', expectedEnd: '2026-03-25', status: 'AGENDADA', observation: '' },
-    { id: 3, keyword: 'Correspondência SEDEX', destinationSector: 'RH', supplier: 'Correios', expectedStart: '2026-03-26', expectedEnd: '', status: 'AGENDADA', observation: '' }
+    { id: 1, keyword: 'Mouse sem fio', destinationSector: 'TI', supplier: 'Mercado Livre', expectedStart: '2026-03-29', expectedEnd: '', status: 'AGENDADA', observation: '' },
+    { id: 2, keyword: 'Computadores DELL', destinationSector: 'TI', supplier: 'Trans Lovato', expectedStart: '2026-03-24', expectedEnd: '2026-03-28', status: 'AGENDADA', observation: '' },
+    { id: 3, keyword: 'Correspondência SEDEX', destinationSector: 'RH', supplier: 'Correios', expectedStart: '2026-03-29', expectedEnd: '', status: 'AGENDADA', observation: '' }
   ],
   deliveryHistory: [],
 
   recurringTrucks: [
-    { id: 1, label: 'Caminhão Açúcar (Rodoin)', plate: 'ROD1234', route: 'Buscar açúcar', status: 'PARADO' },
-    { id: 2, label: 'Caminhão Entrega SP (Rodoin)', plate: 'ROD5678', route: 'Entrega SP', status: 'PARADO' }
+    { id: 1, label: 'Caminhão Açúcar (Toffano)', plate: 'ROD1234', route: 'Buscar açúcar', status: 'PARADO' },
+    { id: 2, label: 'Caminhão Entrega SP (Toffano)', plate: 'ROD5678', route: 'Entrega SP', status: 'PARADO' }
   ],
 
   employeeCars: [
