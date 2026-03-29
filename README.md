@@ -1,15 +1,16 @@
-# Sistema de Controle de Acesso (Portaria)
+# SIGA TOFFANO
 
-Protótipo funcional com foco operacional para portaria, entrevistas, entregas e veículos da Rodoin.
+Sistema inteligente de gestão de acesso (protótipo).
 
 ## Módulos disponíveis
 
+- Login obrigatório por usuário e senha.
 - Tela principal (resumo operacional clicável).
 - Tela de **cadastros** com cards (Pessoa/Visita, Entrega, Veículo), onde cada card abre modal específico para evitar poluição visual.
-- Tela de entregas (com destaque de atrasadas em vermelho).
-- Tela de visitantes (entrevistas x outras visitas, com entrada automática).
-- Tela de veículos (caminhões recorrentes, carros de funcionários, carros da empresa com KM).
-- Tela de consulta por CPF/placa com histórico consolidado.
+- Entregas (com destaque de atrasadas em vermelho).
+- Visitantes (entrevistas x outras visitas, com entrada automática).
+- Veiculos (caminhões recorrentes, carros de funcionários, carros da empresa com KM).
+- Consulta por CPF/placa com histórico consolidado.
 
 ## Regras de negócio implementadas
 
