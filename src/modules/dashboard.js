@@ -61,6 +61,23 @@ function cadastroModals() {
 }
 
 export function dashboardTemplate({ state, activeScreen, todayDeliveries, overdueDeliveries, queryResult }) {
+  if (!state.currentUser) {
+    return `
+      <div class="login-screen">
+        <div class="login-card">
+          <h1>SIGA TOFFANO</h1>
+          <p>Sistema inteligente de gestão de acesso</p>
+          <form id="loginForm" class="login-form">
+            <label>Usuário</label>
+            <input name="username" required />
+            <label>Senha</label>
+            <input name="password" type="password" required />
+            <button class="btn btn-primary" type="submit">Entrar</button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
   const overdueIds = overdueDeliveries.map((d) => d.id);
   const interviewVisits = state.scheduledVisits.filter((v) => v.visitType === 'ENTREVISTA');
   const otherVisits = state.scheduledVisits.filter((v) => v.visitType !== 'ENTREVISTA');
@@ -68,8 +85,8 @@ export function dashboardTemplate({ state, activeScreen, todayDeliveries, overdu
   return `
 <div class="app">
   <aside class="sidebar">
-    <h1>🛡️ Portaria Rodoin</h1>
-    <p>Sistema operacional de controle de acesso.</p>
+    <h1>🛡️ SIGA TOFFANO</h1>
+    <p>Sistema inteligente de gestão de acesso.</p>
 
     <div class="clock">
       <strong id="clockTime">--:--:--</strong>
@@ -79,9 +96,9 @@ export function dashboardTemplate({ state, activeScreen, todayDeliveries, overdu
     <div class="btn-list nav-list">
       <button class="btn btn-primary nav-btn" data-screen="principal">Tela principal</button>
       <button class="btn btn-primary nav-btn" data-screen="cadastros">Cadastros</button>
-      <button class="btn btn-primary nav-btn" data-screen="entregas">Tela de entregas</button>
-      <button class="btn btn-primary nav-btn" data-screen="visitantes">Tela de visitantes</button>
-      <button class="btn btn-primary nav-btn" data-screen="veiculos">Tela de veículos</button>
+      <button class="btn btn-primary nav-btn" data-screen="entregas">Entregas</button>
+      <button class="btn btn-primary nav-btn" data-screen="visitantes">Visitantes</button>
+      <button class="btn btn-primary nav-btn" data-screen="veiculos">Veiculos</button>
       <button class="btn btn-primary nav-btn" data-screen="consulta">Consulta CPF/Placa</button>
     </div>
   </aside>
@@ -90,7 +107,7 @@ export function dashboardTemplate({ state, activeScreen, todayDeliveries, overdu
     <header class="main-header">
       <div>
         <h2>${activeScreen === 'principal' ? 'Resumo Operacional' : 'Módulo: ' + activeScreen.toUpperCase()}</h2>
-        <p>Usuário logado: ${state.currentUser}</p>
+        <p>Usuário logado: ${state.currentUser.name}</p>
       </div>
       <span class="status-pill">Operação ativa</span>
     </header>
